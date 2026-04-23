@@ -1,0 +1,9 @@
+node_modules/
+dist/
+uploads/
+*.log
+.DS_Store
+
+# ui-ux-pro-max skill — cached bytecode
+.github/prompts/ui-ux-pro-max/scripts/__pycache__/
+

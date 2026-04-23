@@ -22,17 +22,17 @@ created: 2026-04-23
 | Component library | base React + Tailwind |
 | Icon library | lucide-react v0.453 |
 | Font | Plus Jakarta Sans (body), Outfit (display/headings), JetBrains Mono (code) |
-| Design language | Obsidian glass — dark glassmorphism with emerald accents and warm-black surfaces |
+| Design language | Slate glass — dark glassmorphism with slate accents and navy surfaces |
 
-**Existing design system confirmed:** The project already has a mature glassmorphism design system implemented in `tailwind.config.js` and `src/styles.css`. This phase formalizes and documents the existing tokens rather than creating new ones.
+**Existing design system confirmed:** The project has a mature glassmorphism design system implemented in `tailwind.config.js` and `src/styles.css`. This phase documents the existing tokens.
 
-**Sources:** Pre-populated from codebase scan (`tailwind.config.js`, `src/styles.css`, `DESIGN_SPEC.md` for aspirational reference — actual implementation uses obsidian glass, not claymorphism).
+**Sources:** Pre-populated from codebase scan (`tailwind.config.js`, `src/styles.css`).
 
 ---
 
 ## Spacing Scale
 
-Standard scale: 4, 8, 16, 24, 32, 48, 64. All values are multiples of 4.
+Standard scale: 4, 8, 16, 24, 32, 48, 64. All multiples of 4.
 
 | Token | Value | Usage |
 |-------|-------|-------|
@@ -83,59 +83,62 @@ Derived from existing `tailwind.config.js` color palette. Dark-mode only (no lig
 
 | Role | Value | Usage |
 |------|-------|-------|
-| Dominant (60%) | `#0a0a0a` (bg) | Page background, base surfaces |
-| Secondary (30%) | `#151110` (surface) through `#302825` (surface-4) | Cards, panels, sidebar, nav |
-| Accent (10%) | `#10b981` (emerald) | Primary CTAs, active states, progress indicators, completed status |
-| Destructive | `#fb7185` (danger) | Delete actions, error states, high priority indicators |
+| Dominant (60%) | `#0f172a` (bg/slate-900) | Page background, base surfaces |
+| Secondary (30%) | `#111b2f` (surface) through `#2d3f60` (surface-4) | Cards, panels, sidebar, nav |
+| Accent (10%) | `#94a3b8` (slate-400) | Primary CTAs, active states, progress indicators |
+| Destructive | `#94a3b8` (same as accent — TODO: differentiate) | Destructive actions, error states |
 
 **Semantic colors:**
 | Token | Value | Usage |
 |-------|-------|-------|
-| ok | `#10b981` | Success/done states |
-| warn | `#f59e0b` | Warnings, medium priority, in-progress sync |
-| info | `#38bdf8` | Info states, "devam" status |
-| accent-2 | `#6ee7b7` | Accent hover highlights |
-| accent-d | `#0d8d64` | Accent dark (pressed states) |
+| ok | `#94a3b8` | Success/done states |
+| warn | `#94a3b8` | Warnings, medium priority |
+| info | `#94a3b8` | Info states |
+| accent-2 | `#cbd5e1` | Accent hover highlights |
+| accent-d | `#64748b` | Accent dark (pressed states) |
 
 **Surface ink scale:**
 | Token | Value | Usage |
 |-------|-------|-------|
-| ink | `#f7f5f2` | Primary text, headings |
-| ink-2 | `#c8c0b6` | Secondary text, body copy |
-| ink-3 | `#91877d` | Tertiary text, labels, hints |
-| ink-4 | `#5e5650` | Disabled, muted text |
+| ink | `#e5e7eb` | Primary text, headings |
+| ink-2 | `#cbd5e1` | Secondary text, body copy |
+| ink-3 | `#94a3b8` | Tertiary text, labels, hints |
+| ink-4 | `#64748b` | Disabled, muted text |
 
 **Border scale:**
 | Token | Value | Usage |
 |-------|-------|-------|
-| line | `#2d2523` | Default card borders |
-| line-2 | `#403430` | Stronger borders, dividers |
-| line-3 | `#584945` | Accent borders |
+| line | `#334155` | Default card borders |
+| line-2 | `#475569` | Stronger borders, dividers |
+| line-3 | `#64748b` | Accent borders |
 
 **Accent reserved for:**
 - Primary action buttons (active nav tabs, main CTA)
 - Completed/done status indicators
 - Progress bar fills
-- Sync status "senkron" badge (connected state)
-- Hover text on interactive elements (`hover:text-accent-2`)
+- Hover text on interactive elements
 - NEVER used for destructive actions, warnings, or generic links
 
+**Note:** warn, danger, info, ok currently all map to `#94a3b8` (slate-400) — should be differentiated in future phase.
+
 **Glass system (from styles.css):**
-- `.glass` — translucent gradient card with backdrop blur (26px) + noise overlay
-- `.glass-strong` — heavier blur (32px) + stronger border, for modals and nav bars
-- `.glass-soft` — lighter blur (18px) + subtle border, for metric cards and inline elements
+- `.glass` — translucent gradient card with backdrop blur (12px) + slate overlay
+- `.glass-strong` — heavier blur (14px) + stronger border, for modals and nav bars
+- `.glass-soft` — lighter blur (10px) + subtle border, for metric cards and inline elements
+- `.card` — 26px border radius with glass styling (26px blur)
+- `.card-2` — 22px border radius with softer glass
 
 ---
 
 ## Visual Hierarchy
 
-**Primary focal point:** h1 display title ("Haftalık Planlayıcı") at 28px+/600/Outfit — draws the eye first on every screen.
+**Primary focal point:** h1 display title at 28px+/600/Outfit — draws the eye first on every screen.
 
 **Secondary focal points (in order):**
-1. Metric cards with large numbers (28px display figures in accent color)
+1. Metric cards with large numbers (display figures in accent color)
 2. Active nav tab button (accent background + shadow glow)
 3. Progress bar fill (accent color, animated)
-4. Priority stripe on task rows (danger/warn left-edge accent)
+4. Priority stripe on task rows (left-edge accent)
 
 **Tertiary elements:** body text, labels, secondary text — recede into surface-2/ink-2 hierarchy.
 
@@ -148,7 +151,7 @@ Derived from existing `tailwind.config.js` color palette. Dark-mode only (no lig
 ### Cards
 | Class | Border Radius | Style | Usage |
 |-------|--------------|-------|-------|
-| `.card` | 26px | glass + backdrop-blur | Primary content cards |
+| `.card` | 26px | glass + backdrop-blur (26px) | Primary content cards |
 | `.card-2` | 22px | glass-soft | Nested/secondary cards |
 | `.glass-soft` | varies | subtle glass | Metric cards, pulse stats |
 | `.glass-strong` | varies | strong glass | Header, modals, bottom nav |
@@ -156,7 +159,7 @@ Derived from existing `tailwind.config.js` color palette. Dark-mode only (no lig
 ### Buttons
 | Variant | Style | Usage |
 |---------|-------|-------|
-| Nav button (active) | `bg-accent text-bg shadow-[0_18px_45px_-24px_rgba(16,185,129,0.95)]` | Active tab in bottom nav |
+| Nav button (active) | `bg-accent text-bg` with shadow | Active tab in bottom nav |
 | Nav button (inactive) | `text-ink-2 hover:bg-white/5 hover:text-ink` | Inactive tab |
 | Icon button | `rounded-full p-1.5` with hover `bg-white/5` | Drag handles, edit icons |
 | Primary CTA | `rounded-[22px]` with `bg-accent` or gradient | Main action buttons |
@@ -165,8 +168,8 @@ Derived from existing `tailwind.config.js` color palette. Dark-mode only (no lig
 | Component | Style | Usage |
 |-----------|-------|-------|
 | `.section-chip` | `rounded-[999px]`, border `rgba(255,244,232,0.1)`, backdrop-blur | Section labels in header |
-| `PriorityBadge` | `rounded-full`, ring-1, `bg-danger/15` or `bg-warn/15` | Priority indicators on tasks |
-| `StatusBadge` | `rounded-full`, ring-1, `bg-accent/15` for done | Status pills on tasks |
+| `PriorityBadge` | `rounded-full`, ring-1 | Priority indicators on tasks |
+| `StatusBadge` | `rounded-full`, ring-1 | Status pills on tasks |
 
 ### Border Radius Scale
 | Token | Value | Usage |
@@ -178,7 +181,7 @@ Derived from existing `tailwind.config.js` color palette. Dark-mode only (no lig
 | lg | 22px | Nav buttons, task rows |
 | xl | 26px | Primary cards, day sections |
 | 2xl | 32px | Hero containers, modal wrappers |
-| 3xl | 34px | Header container (`rounded-[34px]`) |
+| 3xl | 34px | Header container |
 
 ---
 
@@ -245,4 +248,4 @@ No shadcn, no third-party registries. All components are hand-crafted with Tailw
 - [x] Dimension 5 Spacing: PASS
 - [x] Dimension 6 Registry Safety: PASS
 
-**Approval:** approved 2026-04-23
+**Approval:** approved 2026-04-23 (revised — colors updated to match current codebase)
