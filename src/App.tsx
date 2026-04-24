@@ -28,11 +28,12 @@ import {
   useTasks,
   useUpdateTask,
 } from './lib/queries';
-import { DAY_KEYS, type DayKey, type Member, type Priority, type Status, type Task } from './lib/types';
+import { DAY_KEYS, DAY_LABELS, DAY_SHORT, type DayKey, type Member, type Priority, type Status, type Task } from './lib/types';
 import { cn } from './lib/utils';
 import { getBoardLoadState } from './lib/boardState';
 import { buildReorderItems, type BoardBucket, type BoardBuckets } from './lib/taskBoard';
 import { getPaperTheme, type PaperThemeKey } from './lib/paperTheme';
+import { getHiddenEmptyDayKeys, getVisibleDayKeys } from './lib/visibleDays';
 
 type MobileView = 'week' | 'team' | 'notes';
 
@@ -120,12 +121,22 @@ export default function App() {
   const totalCount = (tasks as Task[]).length;
   const visibleCount = DAY_KEYS.reduce((sum, day) => sum + buckets[day].length, buckets.backlog.length);
   const backlogCount = buckets.backlog.length;
+  const visibleDayKeys = useMemo(
+    () => getVisibleDayKeys(buckets, activeComposer),
+    [buckets, activeComposer],
+  );
+  const hiddenEmptyDayKeys = useMemo(
+    () => getHiddenEmptyDayKeys(buckets, activeComposer),
+    [buckets, activeComposer],
+  );
+  const hasOpenComposer = activeComposer !== null;
+  const showBacklog = backlogCount > 0 || activeComposer === 'backlog';
   const hasActiveFilters = search.trim().length > 0 || status !== 'all' || priorities.length > 0;
   const boardLoadState = getBoardLoadState({
     tasksLoading,
     tasksError,
     membersError,
-    visibleCount,
+    visibleCount: visibleCount + (hasOpenComposer ? 1 : 0),
   });
 
   const onToggleStatus = (id: number, next: Status) => {
@@ -225,8 +236,23 @@ export default function App() {
                 <p className="mx-auto mt-2 max-w-md text-sm leading-7 text-ink-2">
                   {hasActiveFilters
                     ? 'Arama ve filtre kriterleri sonuç vermiyor. Filtreleri gevşeterek tekrar deneyebilirsin.'
-                    : 'Henüz görev eklenmemiş. Gün kutularından birine yeni görev ekleyerek başlayabilirsin.'}
+                    : 'Henüz görev eklenmemiş. Aşağıdan bir gün açıp ilk görevi ekleyebilirsin.'}
                 </p>
+                {!hasActiveFilters && (
+                  <div className="mt-6 flex flex-wrap justify-center gap-2">
+                    {DAY_KEYS.map((day) => (
+                      <button
+                        key={day}
+                        type="button"
+                        onClick={() => setActiveComposer(day)}
+                        className="tap-target border border-line-2 bg-surface/70 px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent"
+                        aria-label={`${DAY_LABELS[day]} gününü aç ve ilk görevi ekle`}
+                      >
+                        {DAY_SHORT[day]}
+                      </button>
+                    ))}
+                  </div>
+                )}
               </section>
             ) : (
             <DndContext
@@ -241,7 +267,7 @@ export default function App() {
                   Haftalık görevler
                 </h2>
                 <div className="grid grid-cols-1 items-start gap-x-7 gap-y-12 sm:grid-cols-2 2xl:grid-cols-3">
-                  {DAY_KEYS.map((d) => (
+                  {visibleDayKeys.map((d) => (
                     <DaySection
                       key={d}
                       dayKey={d}
@@ -255,40 +281,62 @@ export default function App() {
                     />
                   ))}
                 </div>
+                {hiddenEmptyDayKeys.length > 0 && (
+                  <div className="mt-8 border-t border-line pt-4">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3">
+                        Boş gün aç
+                      </span>
+                      {hiddenEmptyDayKeys.map((day) => (
+                        <button
+                          key={day}
+                          type="button"
+                          onClick={() => setActiveComposer(day)}
+                          className="tap-target border border-line bg-surface/55 px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent"
+                          aria-label={`${DAY_LABELS[day]} gününü aç ve görev ekle`}
+                        >
+                          {DAY_SHORT[day]}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </section>
 
-              <section
-                className="mt-12 border border-ink bg-[color:var(--paper-tint)] p-5 pt-4"
-                aria-labelledby="backlog-board-title"
-              >
-                <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
-                  <div>
-                    <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
-                      Backlog
-                    </p>
-                    <div className="paper-headline mt-1 font-display text-2xl text-ink">
-                      {backlogCount} görev
+              {showBacklog && (
+                <section
+                  className="mt-12 border border-ink bg-[color:var(--paper-tint)] p-5 pt-4"
+                  aria-labelledby="backlog-board-title"
+                >
+                  <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
+                    <div>
+                      <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+                        Backlog
+                      </p>
+                      <div className="paper-headline mt-1 font-display text-2xl text-ink">
+                        {backlogCount} görev
+                      </div>
+                      <h2 id="backlog-board-title" className="sr-only">
+                        Bekleyen görev havuzu
+                      </h2>
                     </div>
-                    <h2 id="backlog-board-title" className="sr-only">
-                      Bekleyen görev havuzu
-                    </h2>
+                    <p className="max-w-md font-sans text-xs leading-6 text-ink-2">
+                      Henüz haftaya yerleştirilmeyen işleri burada tut.
+                    </p>
                   </div>
-                  <p className="max-w-md font-sans text-xs leading-6 text-ink-2">
-                    Henüz haftaya yerleştirilmeyen işleri burada tut.
-                  </p>
-                </div>
-                <DaySection
-                  dayKey="backlog"
-                  title="Bekleyenler"
-                  tasks={buckets.backlog}
-                  membersById={membersById}
-                  onCreate={onCreate}
-                  onToggleStatus={onToggleStatus}
-                  onOpenTask={setOpenId}
-                  adding={activeComposer === 'backlog'}
-                  onAddingChange={(open) => setActiveComposer(open ? 'backlog' : null)}
-                />
-              </section>
+                  <DaySection
+                    dayKey="backlog"
+                    title="Bekleyenler"
+                    tasks={buckets.backlog}
+                    membersById={membersById}
+                    onCreate={onCreate}
+                    onToggleStatus={onToggleStatus}
+                    onOpenTask={setOpenId}
+                    adding={activeComposer === 'backlog'}
+                    onAddingChange={(open) => setActiveComposer(open ? 'backlog' : null)}
+                  />
+                </section>
+              )}
 
               <DragOverlay>
                 {activeDrag ? (
