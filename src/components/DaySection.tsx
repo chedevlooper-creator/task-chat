@@ -3,7 +3,7 @@ import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { ChevronDown, Plus } from 'lucide-react';
 import { useState } from 'react';
 import type { DayKey, Member, Status, Task } from '../lib/types';
-import { DAY_DOT, DAY_LABELS, DAY_SHORT } from '../lib/types';
+import { DAY_LABELS, DAY_SHORT } from '../lib/types';
 import { cn } from '../lib/utils';
 import { TaskRow } from './TaskRow';
 
@@ -15,6 +15,8 @@ export function DaySection({
   onCreate,
   onToggleStatus,
   onOpenTask,
+  adding,
+  onAddingChange,
   defaultCollapsed = false,
 }: {
   dayKey: DayKey | 'backlog';
@@ -24,10 +26,11 @@ export function DaySection({
   onCreate: (title: string, day: DayKey | null) => void;
   onToggleStatus: (id: number, next: Status) => void;
   onOpenTask: (id: number) => void;
+  adding: boolean;
+  onAddingChange: (open: boolean) => void;
   defaultCollapsed?: boolean;
 }) {
   const [collapsed, setCollapsed] = useState(defaultCollapsed);
-  const [adding, setAdding] = useState(false);
   const [draft, setDraft] = useState('');
 
   const { setNodeRef, isOver } = useDroppable({
@@ -35,76 +38,67 @@ export function DaySection({
     data: { kind: 'day', day: dayKey },
   });
 
-  const dot = dayKey === 'backlog' ? '#a1a1aa' : DAY_DOT[dayKey];
   const label = title ?? (dayKey === 'backlog' ? 'Bekleyenler' : DAY_LABELS[dayKey]);
   const short = dayKey === 'backlog' ? 'BKL' : DAY_SHORT[dayKey];
   const total = tasks.length;
   const done = tasks.filter((t) => t.status === 'done').length;
   const progress = total === 0 ? 0 : Math.round((done / total) * 100);
   const listId = `day-list-${dayKey}`;
+  const draftId = `task-draft-${dayKey}`;
 
   const submit = () => {
     const t = draft.trim();
     if (!t) return;
     onCreate(t, dayKey === 'backlog' ? null : dayKey);
     setDraft('');
-    setAdding(false);
+    onAddingChange(false);
   };
 
   return (
     <section
       className={cn(
-        'glass hover-lift relative flex flex-col overflow-hidden rounded-[24px] transition duration-300',
-        isOver && 'border-info/35 shadow-[0_0_0_1px_rgba(37,99,235,0.14),0_22px_56px_-34px_rgba(37,99,235,0.32)]',
+        'paper-panel relative flex flex-col scroll-mt-24 px-0 pt-3 transition duration-300',
+        isOver && 'bg-accent-d/50 outline outline-1 outline-accent/50',
       )}
     >
-      <div
-        className="pointer-events-none absolute inset-x-0 top-0 h-20 opacity-50"
-        style={{ background: `linear-gradient(180deg, ${dot}18 0%, transparent 82%)` }}
-      />
-
       {/* header */}
-      <header className="relative flex items-center gap-3 border-b border-line px-4 py-4">
+      <header className="relative flex items-start gap-3 border-b-2 border-ink pb-3">
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
-          className="flex min-w-0 items-center gap-3 text-left cursor-pointer"
+          className="tap-target flex min-w-0 items-start gap-2 rounded-sm text-left cursor-pointer hover:text-accent"
           aria-expanded={!collapsed}
           aria-controls={listId}
         >
           <ChevronDown
-            className={cn('h-4 w-4 text-ink-2 transition-transform', collapsed && '-rotate-90')}
+            className={cn('mt-1 h-3.5 w-3.5 text-ink-3 transition-transform', collapsed && '-rotate-90')}
           />
-          <div className="grid h-10 w-10 shrink-0 place-items-center rounded-[16px] border border-line bg-surface-2">
-            <span
-              className="h-2.5 w-2.5 rounded-full shadow-[0_0_14px_currentColor]"
-              style={{ background: dot, color: dot }}
-              aria-hidden
-            />
-          </div>
           <div className="min-w-0">
-            <div className="truncate font-display text-[1.05rem] font-semibold tracking-tight text-ink">
-              {label}
-            </div>
-            <div className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-2">
               {short}
+            </div>
+            <div className="paper-headline truncate font-display text-2xl leading-none text-ink">
+              {label}
             </div>
           </div>
         </button>
-        <div className="ml-auto flex items-center gap-3 text-[11px] text-ink-2 tabular-nums">
-          <div className="rounded-full border border-line bg-surface px-2.5 py-1.5">
-            {done}/{total}
+        <div className="ml-auto flex items-center gap-2 font-mono text-[10px] text-ink-2 tabular-nums">
+          <div
+            className="control-surface px-2.5 py-1.5"
+            aria-label={`${label}: ${total} görev, ${done} tamamlandı`}
+          >
+            {total === 0 ? '0 görev' : `${done}/${total}`}
           </div>
           <div
-            className="relative h-2 w-20 overflow-hidden rounded-full bg-surface-4"
+            className="relative h-1.5 w-16 overflow-hidden bg-surface-4"
             role="progressbar"
             aria-valuenow={progress}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`${label} ilerleme: ${done}/${total}`}
+            aria-label={`${label} ilerleme: ${progress} yüzde`}
           >
             <div
-              className="absolute inset-y-0 left-0 rounded-full bg-info transition-[width] duration-500"
+              className="absolute inset-y-0 left-0 rounded-full bg-accent transition-[width] duration-500"
               style={{ width: `${progress}%` }}
             />
           </div>
@@ -112,74 +106,85 @@ export function DaySection({
       </header>
 
       {!collapsed && (
-        <div ref={setNodeRef} id={listId} className="flex flex-col gap-3 p-3">
+        <div ref={setNodeRef} id={listId} className="flex flex-col py-2">
           <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-            {tasks.map((task, idx) => (
-              <div key={task.id} className="animate-fadeUp" style={{ animationDelay: `${idx * 20}ms` }}>
+            <div role="list" aria-label={`${label} görevleri`} className="space-y-2 px-2">
+              {tasks.map((task, idx) => (
                 <TaskRow
+                  key={task.id}
                   task={task}
                   membersById={membersById}
                   onToggleStatus={onToggleStatus}
                   onOpen={onOpenTask}
+                  style={{ animationDelay: `${idx * 20}ms` }}
                 />
-              </div>
-            ))}
+              ))}
+            </div>
           </SortableContext>
 
           {tasks.length === 0 && !adding && (
-            <div className="flex flex-col items-center gap-2 rounded-[18px] border border-dashed border-line bg-surface-2 px-4 py-7 text-center">
-              <p className="text-sm font-medium text-ink-2">Bu gun icin gorev yok</p>
-              <p className="text-xs leading-6 text-ink-3">Yeni gorev eklemek icin asagidaki alani kullanin.</p>
+            <div className="flex min-h-24 flex-col items-center justify-center gap-2 border-b border-line px-4 py-7 text-center">
+              <p className="paper-headline font-display text-sm text-ink-2">— boş —</p>
+              <p className="font-sans text-[11px] leading-6 text-ink-2">
+                {dayKey === 'backlog' ? 'Haftaya yerleşmemiş görevler burada görünür.' : 'Hazır olduğunda görev ekleyebilirsin.'}
+              </p>
             </div>
           )}
 
           {adding ? (
-            <div className="glass-soft rounded-[20px] border border-info/20 p-3">
+            <div className="border-b border-line bg-surface/60 p-3">
+              <label htmlFor={draftId} className="sr-only">
+                {label} için yeni görev başlığı
+              </label>
               <input
+                id={draftId}
                 autoFocus
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') submit();
                   if (e.key === 'Escape') {
-                    setAdding(false);
+                    onAddingChange(false);
                     setDraft('');
                   }
                 }}
                 placeholder={`${label} için yeni görev…`}
-                className="w-full bg-transparent px-1.5 py-1.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+                className="min-h-11 w-full bg-transparent px-1.5 py-2 text-sm text-ink placeholder:text-ink-3 focus:outline-none"
               />
               <div className="mt-2 flex items-center justify-end gap-2 text-[11px]">
                 <button
                   type="button"
                   onClick={() => {
-                    setAdding(false);
+                    onAddingChange(false);
                     setDraft('');
                   }}
-                  className="rounded-full px-3 py-1.5 text-ink-2 hover:bg-surface"
+                  className="tap-target px-3 py-1.5 text-ink-2 hover:bg-surface"
+                  aria-label={`${label} görev eklemeyi iptal et`}
                 >
-                  iptal
+                  Vazgeç
                 </button>
                 <button
                   type="button"
                   onClick={submit}
-                  className="rounded-full bg-info px-3 py-1.5 font-semibold text-white shadow-[0_16px_32px_-22px_rgba(37,99,235,0.5)] hover:bg-blue-700"
+                  className="tap-target bg-accent px-4 py-1.5 font-semibold text-bg hover:bg-accent-2"
+                  aria-label={`${label} görevini ekle`}
                 >
-                  ekle
+                  Görevi ekle
                 </button>
               </div>
             </div>
           ) : (
             <button
               type="button"
-              onClick={() => setAdding(true)}
+              onClick={() => onAddingChange(true)}
               className={cn(
-                'inline-flex items-center justify-center gap-1.5 rounded-[18px] border border-dashed border-line bg-surface-2 px-3 text-[11px] font-medium text-ink-3 transition hover:border-info/35 hover:bg-surface hover:text-info cursor-pointer',
+                'tap-target mt-2 inline-flex items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/60 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent cursor-pointer',
                 tasks.length === 0 ? 'py-3' : 'mt-0.5 py-3',
               )}
+              aria-label={`${label} için görev ekle`}
             >
               <Plus className="h-3 w-3" />
-              {tasks.length === 0 ? 'boş—görev ekle' : 'görev ekle'}
+              Görev ekle
             </button>
           )}
         </div>

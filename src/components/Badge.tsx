@@ -4,9 +4,9 @@ import { cn } from '../lib/utils';
 
 export function PriorityBadge({ priority }: { priority: Priority }) {
   const map: Record<Priority, string> = {
-    high: 'bg-danger/10 text-danger ring-danger/20',
-    medium: 'bg-warn/10 text-warn ring-warn/20',
-    low: 'bg-surface-3 text-ink-2 ring-line',
+    high: 'border-danger/25 bg-danger/10 text-danger',
+    medium: 'border-warn/25 bg-warn/10 text-warn',
+    low: 'border-line bg-surface-3 text-ink-2',
   };
   const dot: Record<Priority, string> = {
     high: 'bg-danger',
@@ -16,7 +16,7 @@ export function PriorityBadge({ priority }: { priority: Priority }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-inset',
+        'meta-badge inline-flex items-center gap-1.5 border px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em]',
         map[priority],
       )}
     >
@@ -28,14 +28,14 @@ export function PriorityBadge({ priority }: { priority: Priority }) {
 
 export function StatusBadge({ status }: { status: Status }) {
   const map: Record<Status, string> = {
-    pending: 'bg-surface-3 text-ink-2 ring-line',
-    in_progress: 'bg-info/10 text-info ring-info/20',
-    done: 'bg-accent/10 text-accent ring-accent/20',
+    pending: 'border-line bg-surface-3 text-ink-2',
+    in_progress: 'border-info/25 bg-info/10 text-info',
+    done: 'border-accent/25 bg-accent/10 text-accent',
   };
   return (
     <span
       className={cn(
-        'inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ring-1 ring-inset',
+        'meta-badge inline-flex items-center border px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em]',
         map[status],
       )}
     >

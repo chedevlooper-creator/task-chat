@@ -7,6 +7,9 @@ import { cn, formatTime } from '../lib/utils';
 function cleanMessageText(raw: string): string {
   if (!raw) return '';
   const s = raw.trim();
+  if (/openclaw hata|spawn openclaw|enoent/i.test(s)) {
+    return 'OpenClaw bu ortamda hazır değil. Gateway/CLI kurulumu tamamlanınca bu panelden sohbet edebilirsin.';
+  }
   if (!s.startsWith('{') && !s.includes('"finalAssistant')) return s;
   const pick = (o: any): string =>
     (o && (o.finalAssistantText || o.finalAssistantRawText || o.text || o.reply || o.message || o.output || o.content)) || '';
@@ -44,6 +47,15 @@ export function ChatPanel() {
     if (el) el.scrollTop = el.scrollHeight;
   }, [messages, open, send.isPending]);
 
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [open]);
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const t = text.trim();
@@ -58,7 +70,7 @@ export function ChatPanel() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'no-print fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 rounded-full border border-line bg-surface px-4 text-xs font-semibold text-ink shadow-pop transition hover:bg-surface-2 active:scale-[0.98] tap-target lg:bottom-5',
+          'no-print fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 border-2 border-ink bg-[color:var(--paper-strong)] px-4 text-xs font-bold uppercase tracking-[0.12em] text-ink shadow-pop transition hover:bg-surface-2 active:scale-[0.98] tap-target lg:bottom-5',
         )}
         aria-label={open ? 'chat kapat' : 'chat aç'}
       >
@@ -68,25 +80,25 @@ export function ChatPanel() {
 
       {open && (
         <div
-          className="no-print fixed inset-x-0 bottom-0 z-40 animate-slideInRight sm:bottom-24 sm:right-5 sm:inset-x-auto sm:w-[400px]"
+          className="no-print fixed inset-x-0 bottom-0 z-40 animate-slideInRight sm:bottom-24 sm:right-5 sm:inset-x-auto sm:w-[380px] lg:w-[420px]"
           role="dialog"
-          aria-label="openclaw chat"
+          aria-label="OpenClaw chat"
         >
-          <div className="glass-strong flex h-[min(82vh,640px)] flex-col overflow-hidden rounded-t-[24px] pb-safe shadow-modal sm:h-[min(70vh,600px)] sm:rounded-[24px]">
-            <header className="flex items-center gap-2 border-b border-line px-4 py-4">
-              <div className="grid h-8 w-8 place-items-center rounded-full bg-info/10 ring-1 ring-info/20">
+          <div className="flex h-[min(82vh,640px)] flex-col overflow-hidden border-2 border-ink bg-[color:var(--paper-strong)] pb-safe shadow-modal sm:h-[min(70vh,600px)]">
+            <header className="flex items-center gap-2 border-b border-line-2 px-4 py-4">
+              <div className="grid h-8 w-8 place-items-center border border-line bg-surface-2">
                 <MessageSquare className="h-3.5 w-3.5 text-info" />
               </div>
               <div>
                 <div className="font-display text-base font-semibold text-ink">OpenClaw</div>
                 <div className="text-[10px] uppercase tracking-[0.16em] text-ink-3">
-                  session: task-chat-web
+                  Oturum: task-chat-web
                 </div>
               </div>
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="ml-auto rounded-full p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
+                className="ml-auto rounded-sm p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
                 aria-label="kapat"
               >
                 <X className="h-4 w-4" />
@@ -95,10 +107,10 @@ export function ChatPanel() {
 
             <div ref={streamRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-sm">
               {messages.length === 0 && (
-                <div className="glass-soft rounded-[18px] p-3 text-xs leading-6 text-ink-2">
-                  openclaw hazir. <code className="text-ink">/add</code>,{' '}
+                <div className="border border-line bg-surface/70 p-3 text-xs leading-6 text-ink-2">
+                  OpenClaw hazır. <code className="text-ink">/add</code>,{' '}
                   <code className="text-ink">/done</code>,{' '}
-                  <code className="text-ink">/tasks</code> dene veya dogal dilde yaz.
+                  <code className="text-ink">/tasks</code> dene veya doğal dilde yaz.
                 </div>
               )}
               {messages.map((m) => (
@@ -111,32 +123,37 @@ export function ChatPanel() {
                 >
                   <div
                     className={cn(
-                      'max-w-[88%] whitespace-pre-wrap rounded-[18px] px-3 py-2.5 text-[13px] leading-relaxed',
+                      'max-w-[88%] whitespace-pre-wrap border px-3 py-2.5 text-[13px] leading-relaxed',
                       m.role === 'user'
-                        ? 'bg-info/10 text-ink ring-1 ring-info/10'
+                        ? 'border-accent/20 bg-accent-d text-ink'
                         : m.role === 'system'
-                          ? 'bg-surface-3 text-ink-2 ring-1 ring-line'
-                          : 'glass-soft text-ink',
+                          ? 'border-line bg-surface-3 text-ink-2'
+                          : 'border-line bg-surface text-ink',
                     )}
                   >
-                    {m.role === 'assistant' ? cleanMessageText(m.text) : m.text}
+                    {m.role === 'user' ? m.text : cleanMessageText(m.text)}
                   </div>
                   <div className="mt-1 text-[10px] text-ink-3">{formatTime(m.created_at)}</div>
                 </div>
               ))}
               {send.isPending && (
                 <div className="flex items-start">
-                  <div className="glass-soft inline-flex items-center gap-1.5 rounded-[18px] px-3 py-2 text-[13px]">
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-info" />
-                    openclaw calisiyor...
+                  <div className="inline-flex items-center gap-1.5 border border-line bg-surface px-3 py-2 text-[13px]">
+                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                    OpenClaw çalışıyor...
                   </div>
+                </div>
+              )}
+              {send.isError && (
+                <div className="border border-danger/25 bg-danger/10 px-3 py-2 text-xs leading-6 text-danger" role="alert">
+                  Mesaj gönderilemedi. Bağlantıyı veya OpenClaw kurulumunu kontrol edip tekrar dene.
                 </div>
               )}
             </div>
 
             <form
               onSubmit={submit}
-              className="flex items-end gap-2 border-t border-line p-3"
+              className="flex items-end gap-2 border-t border-line-2 p-3"
             >
               <textarea
                 value={text}
@@ -148,14 +165,14 @@ export function ChatPanel() {
                   }
                 }}
                 rows={1}
-                placeholder="mesaj ya da /komut…"
-                className="min-h-[46px] flex-1 rounded-[18px] border border-line bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-3 focus:border-info/30 focus:ring-0"
+                placeholder="Mesaj ya da /komut…"
+                className="min-h-[46px] flex-1 border border-line-2 bg-surface px-3 py-3 text-sm text-ink placeholder:text-ink-3 focus:border-accent/60 focus:ring-0"
                 style={{ resize: 'none' }}
               />
               <button
                 type="submit"
                 disabled={send.isPending || text.trim().length === 0}
-                className="tap-target grid h-11 w-11 shrink-0 place-items-center rounded-[18px] bg-info text-white shadow-pop transition hover:bg-blue-700 disabled:opacity-40"
+                className="tap-target grid h-11 w-11 shrink-0 place-items-center bg-accent text-bg shadow-pop transition hover:bg-accent-2 disabled:opacity-40"
                 aria-label="gönder"
               >
                 <Send className="h-4 w-4" />

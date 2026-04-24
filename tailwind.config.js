@@ -1,36 +1,39 @@
+const colorVar = (name, fallbackOpacity = '1') => ({ opacityValue }) =>
+  `rgb(var(${name}) / ${opacityValue ?? fallbackOpacity})`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        bg: '#f4f7fb',
-        surface: '#ffffff',
-        'surface-2': '#f8fafc',
-        'surface-3': '#eef2f7',
-        'surface-4': '#e2e8f0',
+        bg: colorVar('--bg-0-rgb'),
+        surface: colorVar('--surface-rgb'),
+        'surface-2': colorVar('--surface-2-rgb'),
+        'surface-3': colorVar('--surface-3-rgb'),
+        'surface-4': colorVar('--surface-4-rgb'),
 
-        ink: '#0f172a',
-        'ink-2': '#334155',
-        'ink-3': '#64748b',
-        'ink-4': '#94a3b8',
+        ink: colorVar('--ink-rgb'),
+        'ink-2': colorVar('--ink-2-rgb'),
+        'ink-3': colorVar('--ink-3-rgb'),
+        'ink-4': colorVar('--ink-4-rgb'),
 
-        line: '#dbe5f0',
-        'line-2': '#cbd5e1',
-        'line-3': '#94a3b8',
+        line: colorVar('--ink-rgb', '0.15'),
+        'line-2': colorVar('--ink-rgb', '0.34'),
+        'line-3': colorVar('--ink-rgb', '0.64'),
 
-        accent: '#059669',
-        'accent-2': '#047857',
-        'accent-d': '#ecfdf5',
+        accent: colorVar('--accent-rgb'),
+        'accent-2': colorVar('--accent-2-rgb'),
+        'accent-d': colorVar('--accent-tint-rgb'),
 
-        warn: '#d97706',
-        danger: '#dc2626',
-        info: '#2563eb',
-        ok: '#059669',
+        warn: colorVar('--warn-rgb'),
+        danger: colorVar('--danger-rgb'),
+        info: colorVar('--info-rgb'),
+        ok: colorVar('--ok-rgb'),
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Source Serif 4"', '"Source Serif Pro"', 'Newsreader', 'Georgia', 'ui-serif', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
@@ -52,10 +55,10 @@ export default {
         '3xl': '32px',
       },
       boxShadow: {
-        pop: '0 16px 36px -24px rgba(15, 23, 42, 0.28)',
-        modal: '0 30px 80px -30px rgba(15, 23, 42, 0.32)',
-        focus: '0 0 0 3px rgba(37, 99, 235, 0.18)',
-        glass: '0 20px 44px -28px rgba(15, 23, 42, 0.2)',
+        pop: '0 18px 38px -30px rgba(34, 29, 22, 0.28)',
+        modal: '0 30px 80px -36px rgba(34, 29, 22, 0.42)',
+        focus: '0 0 0 3px rgba(201, 67, 12, 0.18)',
+        glass: 'none',
       },
       transitionTimingFunction: {
         spring: 'cubic-bezier(.2, .8, .2, 1)',

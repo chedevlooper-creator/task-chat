@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Trash2, UserPlus, Users } from 'lucide-react';
+import { Trash2, UserPlus } from 'lucide-react';
 import type { Task } from '../lib/types';
 import {
   useCreateMember,
@@ -8,6 +8,7 @@ import {
   useTasks,
 } from '../lib/queries';
 import { Avatar } from './Avatar';
+import { cn } from '../lib/utils';
 
 const PALETTE = [
   '#2563eb', '#0f766e', '#0891b2', '#4f46e5', '#475569',
@@ -28,6 +29,7 @@ export function TeamPanel() {
     return {
       total: assigned.length,
       done: assigned.filter((t) => t.status === 'done').length,
+      active: assigned.filter((t) => t.status !== 'done').length,
     };
   };
 
@@ -40,64 +42,84 @@ export function TeamPanel() {
     setColor(randomColor());
   };
 
+  const deleteMember = (id: number, memberName: string) => {
+    if (confirm(`${memberName} ekipten çıkarılsın mı? Atanmış görevlerdeki kişi bilgisi de kaldırılır.`)) {
+      del.mutate(id);
+    }
+  };
+
+  const nameInputId = 'team-member-name';
+
   return (
-    <section className="glass rounded-[24px] p-4 sm:p-5">
-      <header className="mb-4 flex items-center gap-2">
-        <Users className="h-4 w-4 text-info" />
-        <h2 className="font-display text-lg font-semibold tracking-tight">Takım</h2>
-        <span className="ml-auto rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] text-ink-3">{members.length} üye</span>
+    <section className="paper-panel pt-3">
+      <header className="mb-2 flex items-baseline gap-2">
+        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
+          Takım
+        </h2>
+        <span className="ml-auto font-mono text-[10px] text-ink-2">
+          {members.length} üye
+        </span>
       </header>
 
-      <form onSubmit={submit} className="mb-4 flex items-center gap-2">
+      <form onSubmit={submit} className="mb-3 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setColor(randomColor())}
-          className="h-9 w-9 shrink-0 rounded-full border border-white/70 shadow-[0_10px_18px_-14px_rgba(15,23,42,0.24)]"
+          className="tap-target shrink-0 border border-line-2"
           style={{ background: color }}
-          aria-label="renk"
+          aria-label="Yeni üye rengini değiştir"
         />
+        <label htmlFor={nameInputId} className="sr-only">
+          Yeni üye adı
+        </label>
         <input
+          id={nameInputId}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="yeni üye adı…"
-          className="flex-1 rounded-[16px] border border-line bg-surface px-3 py-2.5 text-sm focus:border-info/30 focus:ring-0"
+          className="min-h-11 flex-1 border border-line-2 bg-surface/85 px-3 py-2 font-sans text-sm text-ink placeholder:text-ink-3 focus:border-accent/60 focus:ring-0"
         />
         <button
           type="submit"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] bg-info text-white shadow-[0_16px_30px_-20px_rgba(37,99,235,0.45)] hover:bg-blue-700"
-          aria-label="üye ekle"
+          disabled={create.isPending || name.trim().length === 0}
+          className="tap-target inline-flex shrink-0 items-center justify-center bg-accent text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+          aria-label="Yeni üyeyi takıma ekle"
         >
-          <UserPlus className="h-3.5 w-3.5" />
+          <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </form>
 
-      <ul className="space-y-1">
+      <ul className="border-t border-b border-ink">
         {members.length === 0 && (
-          <li className="rounded-[18px] border border-dashed border-line bg-surface-2 py-4 text-center text-xs text-ink-3">
-            Takimda henuz uye yok.
+          <li className="py-4 text-center font-sans text-xs text-ink-3">
+            Takımda henüz üye yok.
           </li>
         )}
-        {members.map((m) => {
+        {members.map((m, idx) => {
           const c = counts(m.id);
           return (
             <li
               key={m.id}
-              className="group glass-soft row-hover flex items-center gap-3 rounded-[18px] px-3 py-2.5"
+              className={cn(
+                'group row-hover flex items-center gap-3 py-2.5',
+                idx !== members.length - 1 && 'border-b border-line',
+              )}
             >
-              <Avatar member={m} size={24} />
+              <Avatar member={m} size={26} />
               <div className="min-w-0 flex-1">
-                <div className="truncate text-sm text-ink">{m.name}</div>
-                <div className="text-[10px] text-ink-3 tabular-nums">
-                  {c.done}/{c.total} tamamlandı
+                <div className="truncate font-sans text-[13px] font-medium text-ink">{m.name}</div>
+                <div className="font-mono text-[10px] text-ink-2 tabular-nums">
+                  {c.active} aktif · {c.done} tamam
                 </div>
               </div>
               <button
                 type="button"
-                onClick={() => del.mutate(m.id)}
-                className="rounded-full p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger group-hover:opacity-100"
-                aria-label={`${m.name} sil`}
+                onClick={() => deleteMember(m.id, m.name)}
+                disabled={del.isPending}
+                className="tap-target rounded-sm p-1.5 text-ink-3 opacity-85 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
+                aria-label={`${m.name} üyesini sil`}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </li>
           );

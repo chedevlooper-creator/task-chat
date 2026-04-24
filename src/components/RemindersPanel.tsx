@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { StickyNote, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import {
   useCreateReminder,
   useDeleteReminder,
   useReminders,
 } from '../lib/queries';
+import { cn } from '../lib/utils';
+
+function relativeMark(createdAt: number): string {
+  const days = Math.max(1, Math.round((Date.now() - createdAt) / 86400000));
+  return `T+${days}g`;
+}
 
 export function RemindersPanel() {
   const { data: reminders = [] } = useReminders();
@@ -24,79 +30,114 @@ export function RemindersPanel() {
     setOpen(false);
   };
 
+  const deleteReminder = (id: number, reminderTitle: string) => {
+    if (confirm(`"${reminderTitle}" notu silinsin mi?`)) {
+      del.mutate(id);
+    }
+  };
+
+  const titleId = 'reminder-title';
+  const bodyId = 'reminder-body';
+
   return (
-    <section className="glass rounded-[24px] p-4 sm:p-5">
-      <header className="mb-4 flex items-center gap-2">
-        <StickyNote className="h-4 w-4 text-warn" />
-        <h2 className="font-display text-lg font-semibold tracking-tight">Notlar</h2>
+    <section className="paper-panel pt-3">
+      <header className="mb-2 flex items-baseline gap-2">
+        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
+          Hatırlatıcılar
+        </h2>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1 rounded-full border border-line bg-surface px-3 py-1.5 text-[11px] text-ink-2 hover:bg-surface-2 hover:text-ink"
+          className="tap-target ml-auto inline-flex items-center gap-1 border border-line-2 bg-surface px-2.5 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-2 hover:bg-surface-2 hover:text-ink"
+          aria-expanded={open}
+          aria-controls="reminder-form"
+          aria-label="Yeni hatırlatıcı ekle"
         >
-          <Plus className="h-3 w-3" /> ekle
+          <Plus className="h-3 w-3" aria-hidden="true" /> ekle
         </button>
       </header>
 
       {open && (
-        <form onSubmit={submit} className="glass-soft mb-4 space-y-2 rounded-[20px] p-3">
+        <form id="reminder-form" onSubmit={submit} className="mb-3 space-y-2 border border-line bg-surface/60 p-3">
+          <label htmlFor={titleId} className="sr-only">
+            Hatırlatıcı başlığı
+          </label>
           <input
+            id={titleId}
             autoFocus
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="başlık"
-            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+            className="min-h-10 w-full bg-transparent font-sans text-sm text-ink placeholder:text-ink-3 focus:outline-none"
           />
+          <label htmlFor={bodyId} className="sr-only">
+            Hatırlatıcı detayı
+          </label>
           <textarea
+            id={bodyId}
             value={body}
             onChange={(e) => setBody(e.target.value)}
             placeholder="detay (opsiyonel)"
             rows={2}
-            className="w-full bg-transparent text-xs leading-6 text-ink-2 placeholder:text-ink-3 focus:outline-none"
+            className="w-full bg-transparent font-sans text-xs leading-6 text-ink-2 placeholder:text-ink-3 focus:outline-none"
             style={{ resize: 'vertical' }}
           />
           <div className="flex justify-end gap-2 text-[11px]">
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="rounded-full px-3 py-1.5 text-ink-2 hover:bg-surface"
+              className="tap-target px-3 py-1.5 text-ink-2 hover:bg-surface"
+              aria-label="Hatırlatıcı eklemeyi iptal et"
             >
-              iptal
+              Vazgeç
             </button>
             <button
               type="submit"
-              className="rounded-full bg-info px-3 py-1.5 font-semibold text-white shadow-[0_16px_28px_-20px_rgba(37,99,235,0.5)] hover:bg-blue-700"
+              disabled={create.isPending || title.trim().length === 0}
+              className="tap-target bg-accent px-4 py-1.5 font-sans font-semibold text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+              aria-label="Hatırlatıcıyı kaydet"
             >
-              kaydet
+              Hatırlatıcıyı kaydet
             </button>
           </div>
         </form>
       )}
 
-      <ul className="space-y-1.5">
+      <ul className="border-t border-ink">
         {reminders.length === 0 && (
-          <li className="rounded-[18px] border border-dashed border-line bg-surface-2 py-4 text-center text-xs text-ink-3">
-            Henuz not eklenmedi.
+          <li className="py-4 text-center font-sans text-xs text-ink-3">
+            Henüz not eklenmedi.
           </li>
         )}
-        {reminders.map((r) => (
+        {reminders.map((r, idx) => (
           <li
             key={r.id}
-            className="group glass-soft row-hover relative rounded-[18px] p-3.5"
+            className={cn(
+              'group row-hover relative py-3 pr-8',
+              idx !== reminders.length - 1 && 'border-b border-line',
+            )}
           >
-            <div className="pr-6 text-sm font-medium text-ink">{r.title}</div>
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="paper-headline font-display text-[14px] leading-snug text-ink">
+                {r.title}
+              </div>
+              <div className="font-mono text-[10px] tabular-nums text-accent">
+                {relativeMark(r.created_at)}
+              </div>
+            </div>
             {r.body && (
-              <div className="whitespace-pre-wrap pr-6 text-xs leading-6 text-ink-2">
+              <div className="mt-1 whitespace-pre-wrap pr-6 font-sans text-[11px] leading-6 text-ink-2">
                 {r.body}
               </div>
             )}
             <button
               type="button"
-              onClick={() => del.mutate(r.id)}
-              className="absolute right-2 top-2 rounded-full p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger group-hover:opacity-100"
-              aria-label="sil"
+              onClick={() => deleteReminder(r.id, r.title)}
+              disabled={del.isPending}
+              className="tap-target absolute right-0 top-2 rounded-sm p-1.5 text-ink-3 opacity-85 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
+              aria-label={`${r.title} hatırlatıcısını sil`}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </li>
         ))}
