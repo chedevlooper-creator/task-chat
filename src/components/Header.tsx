@@ -35,11 +35,11 @@ function MetricCell({
   value: number | string;
 }) {
   return (
-    <div className="min-h-[74px] border-r border-line px-4 py-4 last:border-r-0">
-      <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+    <div className="min-h-[54px] border-r border-line px-3 py-2.5 last:border-r-0 sm:px-4">
+      <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
         {label}
       </div>
-      <div className="mt-1 font-display text-[44px] leading-none tabular-nums text-ink">
+      <div className="mt-0.5 font-display text-[28px] leading-none tabular-nums text-ink sm:text-[32px]">
         {value}
       </div>
     </div>
@@ -54,8 +54,8 @@ function EditionSelector({
   onChange: (key: PaperThemeKey) => void;
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-2 border-b border-line px-3 py-3">
-      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3">
+    <div className="flex flex-wrap items-center justify-start gap-2 lg:justify-end">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-2">
         Paper & Ink
       </span>
       <div className="inline-flex flex-wrap justify-center border border-line-2 bg-surface/70 p-1" role="group" aria-label="Paper & Ink edisyonu">
@@ -68,7 +68,7 @@ function EditionSelector({
               type="button"
               onClick={() => onChange(key)}
               className={cn(
-                'tap-target min-h-10 px-3 py-2 font-sans text-[10px] font-bold uppercase tracking-[0.14em] transition',
+                'tap-target min-h-9 px-2.5 py-1.5 font-sans text-[10px] font-bold uppercase tracking-[0.14em] transition',
                 selected
                   ? 'bg-ink text-bg'
                   : 'text-ink-3 hover:bg-accent-d hover:text-accent',
@@ -113,10 +113,10 @@ export function Header({
   const isFiltered = visibleCount !== totalCount;
 
   return (
-    <header className="no-print relative z-10 px-4 pb-4 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pt-7">
+    <header className="no-print relative z-10 px-4 pb-2 pt-3 sm:px-6 sm:pt-4 lg:px-8 lg:pt-5">
       <div className="mx-auto max-w-[1400px]">
         {/* Masthead rail */}
-        <div className="grid grid-cols-1 gap-2 border-b border-ink pb-3 text-center font-mono text-[11px] tracking-[0.14em] text-ink sm:grid-cols-3 sm:items-baseline sm:text-left">
+        <div className="grid grid-cols-1 gap-1 border-b border-ink pb-2 text-center font-mono text-[10px] tracking-[0.14em] text-ink sm:grid-cols-3 sm:items-baseline sm:text-left">
           <span>{mastheadLabel(now, paperTheme)}</span>
           <span className="justify-self-center font-bold uppercase text-accent">
             {paperTheme.edition}
@@ -125,19 +125,20 @@ export function Header({
         </div>
 
         {/* Title */}
-        <div className="border-b border-ink py-7 text-center sm:py-8">
-          <div className="font-sans text-[10px] font-medium uppercase tracking-[0.4em] text-ink-3">
-            Task Chat — Operasyon Panosu
+        <div className="grid gap-4 border-b border-ink py-4 text-left lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:py-5">
+          <div>
+            <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.36em] text-ink-2">
+              Task Chat — Operasyon Panosu
+            </div>
+            <h1 className="paper-headline mt-2 font-display text-[2.65rem] leading-none text-ink sm:text-[3.8rem] lg:text-[4.35rem]">
+              Haftalık Planlayıcı
+            </h1>
+            <p className="mt-2 max-w-2xl font-sans text-xs leading-6 text-ink-2 sm:text-[13px]">
+              Takım görevlerini tek bir sayfada topla; sadece çalışan günleri öne çıkar.
+            </p>
           </div>
-          <h1 className="paper-headline mt-3 font-display text-[3.2rem] leading-none text-ink sm:text-[5rem]">
-            Haftalık Planlayıcı
-          </h1>
-          <p className="mx-auto mt-3 max-w-xl font-sans text-xs leading-6 text-ink-2 sm:text-[13px]">
-            Takım görevlerini tek bir sayfada topla ve haftayı okunabilir bir düzende kur.
-          </p>
+          <EditionSelector active={themeKey} onChange={onThemeChange} />
         </div>
-
-        <EditionSelector active={themeKey} onChange={onThemeChange} />
 
         {/* Stats rail */}
         <div className="border-b border-ink">
@@ -146,18 +147,18 @@ export function Header({
             <MetricCell label="Tamamlanan" value={done} />
             <MetricCell label="Devam eden" value={inProgress} />
             <MetricCell label="Bekliyor" value={pending} />
-            <div className="col-span-2 px-4 py-4 sm:col-span-1">
-              <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+            <div className="col-span-2 px-3 py-2.5 sm:col-span-1 sm:px-4">
+              <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
                 İlerleme
               </div>
-              <div className="mt-1 flex items-baseline gap-3">
-              <div className="paper-headline font-display text-[44px] leading-none tabular-nums text-accent">
-                %{progress}
-              </div>
+              <div className="mt-0.5 flex items-baseline gap-3">
+                <div className="paper-headline font-display text-[30px] leading-none tabular-nums text-accent sm:text-[34px]">
+                  %{progress}
+                </div>
                 <div className="font-sans text-[11px] text-ink-3">tamamlandı</div>
               </div>
               <div
-                className="mt-3 h-[4px] bg-[color:var(--rule-thin)]"
+                className="mt-2 h-[4px] bg-[color:var(--rule-thin)]"
                 role="progressbar"
                 aria-valuenow={progress}
                 aria-valuemin={0}
@@ -171,7 +172,7 @@ export function Header({
               </div>
             </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2 font-sans text-[11px] text-ink-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-3 py-1.5 font-sans text-[11px] text-ink-3 sm:px-4">
             <span>
               {isFiltered
                 ? `${visibleCount} / ${totalCount} görev görünür`

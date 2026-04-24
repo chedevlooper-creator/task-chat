@@ -44,12 +44,12 @@ export function FilterBar({
   const hasAdvancedFilters = status !== 'all' || priorities.length > 0 || search.trim().length > 0;
 
   return (
-    <div className="no-print sticky top-0 z-20 border-y border-line bg-[color:var(--paper)] px-4 pb-3 pt-3 backdrop-blur-sm sm:px-6 lg:px-8">
+    <div className="no-print sticky top-0 z-20 border-y border-line bg-[color:var(--paper)] px-4 py-2 backdrop-blur-sm sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1400px]">
         <div>
-          <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+          <div className="flex flex-col gap-1.5 xl:flex-row xl:items-center xl:justify-between">
             <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:flex sm:gap-3">
-              <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.24em] text-ink-3 sm:inline">
+              <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.24em] text-ink-2 sm:inline">
                 Ara
               </span>
               <label className="relative min-w-0 flex-1 xl:max-w-[520px]">
@@ -58,7 +58,7 @@ export function FilterBar({
                   value={search}
                   onChange={(e) => onSearch(e.target.value)}
                   placeholder="Görevlerde ara"
-                  className="h-9 w-full border-0 border-b border-line bg-transparent py-2 pl-6 pr-2 text-sm text-ink placeholder:text-ink-3 transition focus:border-accent focus:ring-0"
+                  className="h-8 w-full border-0 border-b border-line bg-transparent py-1.5 pl-6 pr-2 text-sm text-ink placeholder:text-ink-3 transition focus:border-accent focus:ring-0"
                   aria-label="Görevlerde ara"
                 />
               </label>
@@ -85,20 +85,20 @@ export function FilterBar({
               )}
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 xl:justify-end">
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 xl:justify-end">
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-3">Durum</span>
-                <div className="flex flex-wrap items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-2">Durum</span>
+                <div className="control-surface inline-flex flex-wrap items-center gap-1 p-1" role="group" aria-label="Durum filtresi">
                   {STATUS_TABS.map((t) => (
                     <button
                       key={t.key}
                       type="button"
                       onClick={() => onStatus(t.key)}
                       className={cn(
-                        'shrink-0 border-b-2 px-1.5 py-1 text-xs font-semibold transition duration-200',
+                        'tap-target shrink-0 border px-2.5 py-1.5 text-xs font-bold transition duration-200',
                         status === t.key
-                          ? 'border-accent text-accent'
-                          : 'border-transparent text-ink-2 hover:border-line-2 hover:text-ink',
+                          ? 'border-accent/35 bg-accent-d text-accent'
+                          : 'border-transparent text-ink-2 hover:border-line-2 hover:bg-surface-2 hover:text-ink',
                       )}
                       aria-pressed={status === t.key}
                     >
@@ -109,8 +109,8 @@ export function FilterBar({
               </div>
 
               <div className="flex min-w-0 flex-wrap items-center gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-3">Öncelik</span>
-                <div className="flex flex-wrap items-center gap-1">
+                <span className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-2">Öncelik</span>
+                <div className="control-surface inline-flex flex-wrap items-center gap-1 p-1" role="group" aria-label="Öncelik filtresi">
                   {PRIORITY_OPTS.map((p) => {
                     const active = priorities.includes(p.key);
                     return (
@@ -119,10 +119,10 @@ export function FilterBar({
                         type="button"
                         onClick={() => togglePriority(p.key)}
                         className={cn(
-                          'inline-flex items-center gap-1.5 border-b-2 px-1.5 py-1 text-xs font-semibold transition duration-200',
+                          'tap-target inline-flex items-center gap-1.5 border px-2.5 py-1.5 text-xs font-bold transition duration-200',
                           active
-                            ? 'border-accent text-accent'
-                            : 'border-transparent text-ink-2 hover:border-line-2 hover:text-ink',
+                            ? 'border-accent/35 bg-accent-d text-accent'
+                            : 'border-transparent text-ink-2 hover:border-line-2 hover:bg-surface-2 hover:text-ink',
                         )}
                         aria-pressed={active}
                       >

@@ -242,6 +242,8 @@ body::after {
   button:not(:disabled) { cursor: pointer; }
   button:disabled { cursor: not-allowed; }
 
+  .tap-target { min-height: 40px; min-width: 40px; }
+
   @media (hover: none) and (pointer: coarse) {
     .tap-target { min-height: 44px; min-width: 44px; }
   }
@@ -279,6 +281,49 @@ body::after {
     border-top: 2px solid var(--ink-primary);
     background: linear-gradient(180deg, rgb(var(--surface-rgb) / 0.26), transparent 72px);
   }
+
+  .meta-badge {
+    min-height: 24px;
+  }
+
+  .control-surface {
+    border: 1px solid var(--line);
+    background: rgb(var(--surface-rgb) / 0.72);
+  }
+
+  .control-surface-strong {
+    border: 1px solid rgb(var(--ink-rgb) / 0.42);
+    background: rgb(var(--surface-rgb) / 0.9);
+  }
+}
+
+html[data-paper-theme="nightEdition"] body::before {
+  display: none;
+}
+
+html[data-paper-theme="nightEdition"] .paper-panel {
+  background: linear-gradient(180deg, rgb(var(--surface-2-rgb) / 0.84), rgb(var(--surface-rgb) / 0.34) 92px, transparent 100%);
+}
+
+html[data-paper-theme="nightEdition"] .control-surface {
+  background: rgb(var(--surface-2-rgb) / 0.86);
+}
+
+html[data-paper-theme="nightEdition"] .control-surface-strong {
+  background: rgb(var(--surface-2-rgb) / 0.96);
+}
+
+html[data-paper-theme="nightEdition"] .paper-headline,
+html[data-paper-theme="nightEdition"] .text-ink {
+  color: #fbf1e3 !important;
+}
+
+html[data-paper-theme="nightEdition"] .text-ink-2 {
+  color: #e2d4c0 !important;
+}
+
+html[data-paper-theme="nightEdition"] .text-ink-3 {
+  color: #b9aa94 !important;
 }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }

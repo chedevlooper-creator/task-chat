@@ -14,8 +14,8 @@ function makeTask(id: number, day: Task['day']): Task {
     notes: '',
     assignee_ids: [],
     attachments: [],
+    done: 0,
     created_at: Date.now(),
-    updated_at: Date.now(),
   };
 }
 

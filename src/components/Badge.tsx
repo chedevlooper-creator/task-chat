@@ -16,7 +16,7 @@ export function PriorityBadge({ priority }: { priority: Priority }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]',
+        'meta-badge inline-flex items-center gap-1.5 border px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em]',
         map[priority],
       )}
     >
@@ -35,7 +35,7 @@ export function StatusBadge({ status }: { status: Status }) {
   return (
     <span
       className={cn(
-        'inline-flex items-center border px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.12em]',
+        'meta-badge inline-flex items-center border px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.1em]',
         map[status],
       )}
     >

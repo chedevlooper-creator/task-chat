@@ -53,10 +53,10 @@ export function TeamPanel() {
   return (
     <section className="paper-panel pt-3">
       <header className="mb-2 flex items-baseline gap-2">
-        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
           Takım
         </h2>
-        <span className="ml-auto font-mono text-[10px] text-ink-3">
+        <span className="ml-auto font-mono text-[10px] text-ink-2">
           {members.length} üye
         </span>
       </header>
@@ -65,7 +65,7 @@ export function TeamPanel() {
         <button
           type="button"
           onClick={() => setColor(randomColor())}
-          className="h-9 w-9 shrink-0 border border-line-2"
+          className="tap-target shrink-0 border border-line-2"
           style={{ background: color }}
           aria-label="Yeni üye rengini değiştir"
         />
@@ -77,12 +77,12 @@ export function TeamPanel() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="yeni üye adı…"
-          className="flex-1 border border-line-2 bg-surface/80 px-3 py-2 font-sans text-sm focus:border-accent/60 focus:ring-0"
+          className="min-h-11 flex-1 border border-line-2 bg-surface/85 px-3 py-2 font-sans text-sm text-ink placeholder:text-ink-3 focus:border-accent/60 focus:ring-0"
         />
         <button
           type="submit"
           disabled={create.isPending || name.trim().length === 0}
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+          className="tap-target inline-flex shrink-0 items-center justify-center bg-accent text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
           aria-label="Yeni üyeyi takıma ekle"
         >
           <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -108,7 +108,7 @@ export function TeamPanel() {
               <Avatar member={m} size={26} />
               <div className="min-w-0 flex-1">
                 <div className="truncate font-sans text-[13px] font-medium text-ink">{m.name}</div>
-                <div className="font-mono text-[10px] text-ink-3 tabular-nums">
+                <div className="font-mono text-[10px] text-ink-2 tabular-nums">
                   {c.active} aktif · {c.done} tamam
                 </div>
               </div>
@@ -116,7 +116,7 @@ export function TeamPanel() {
                 type="button"
                 onClick={() => deleteMember(m.id, m.name)}
                 disabled={del.isPending}
-                className="tap-target rounded-sm p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
+                className="tap-target rounded-sm p-1.5 text-ink-3 opacity-85 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
                 aria-label={`${m.name} üyesini sil`}
               >
                 <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

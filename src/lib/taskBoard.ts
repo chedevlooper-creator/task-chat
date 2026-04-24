@@ -52,14 +52,17 @@ export function buildReorderItems({
 
   const activeIndex = fromIds.indexOf(activeTaskId);
   if (activeIndex === -1) return [];
+  const overIndex = toIds.indexOf(Number(overId));
 
   const [movedId] = fromIds.splice(activeIndex, 1);
 
   let insertAt: number;
   if (String(overId).startsWith('drop-')) {
     insertAt = toIds.length;
+  } else if (fromBucket === toBucket) {
+    insertAt = overIndex === -1 ? toIds.length : overIndex;
   } else {
-    insertAt = toIds.indexOf(Number(overId));
+    insertAt = overIndex;
     if (insertAt === -1) insertAt = toIds.length;
   }
 

@@ -42,13 +42,13 @@ export function RemindersPanel() {
   return (
     <section className="paper-panel pt-3">
       <header className="mb-2 flex items-baseline gap-2">
-        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-2">
           Hatırlatıcılar
         </h2>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1 border border-line-2 bg-surface px-2.5 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-2 hover:bg-surface-2 hover:text-ink"
+          className="tap-target ml-auto inline-flex items-center gap-1 border border-line-2 bg-surface px-2.5 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-2 hover:bg-surface-2 hover:text-ink"
           aria-expanded={open}
           aria-controls="reminder-form"
           aria-label="Yeni hatırlatıcı ekle"
@@ -68,7 +68,7 @@ export function RemindersPanel() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="başlık"
-            className="w-full bg-transparent font-sans text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+            className="min-h-10 w-full bg-transparent font-sans text-sm text-ink placeholder:text-ink-3 focus:outline-none"
           />
           <label htmlFor={bodyId} className="sr-only">
             Hatırlatıcı detayı
@@ -86,7 +86,7 @@ export function RemindersPanel() {
             <button
               type="button"
               onClick={() => setOpen(false)}
-              className="px-3 py-1.5 text-ink-2 hover:bg-surface"
+              className="tap-target px-3 py-1.5 text-ink-2 hover:bg-surface"
               aria-label="Hatırlatıcı eklemeyi iptal et"
             >
               Vazgeç
@@ -94,7 +94,7 @@ export function RemindersPanel() {
             <button
               type="submit"
               disabled={create.isPending || title.trim().length === 0}
-              className="bg-accent px-3 py-1.5 font-sans font-semibold text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+              className="tap-target bg-accent px-4 py-1.5 font-sans font-semibold text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
               aria-label="Hatırlatıcıyı kaydet"
             >
               Hatırlatıcıyı kaydet
@@ -134,7 +134,7 @@ export function RemindersPanel() {
               type="button"
               onClick={() => deleteReminder(r.id, r.title)}
               disabled={del.isPending}
-              className="tap-target absolute right-0 top-2 rounded-sm p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
+              className="tap-target absolute right-0 top-2 rounded-sm p-1.5 text-ink-3 opacity-85 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
               aria-label={`${r.title} hatırlatıcısını sil`}
             >
               <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />

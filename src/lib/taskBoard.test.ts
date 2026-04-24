@@ -74,4 +74,25 @@ describe('buildReorderItems', () => {
       { id: 2, day: 'mon', sort_order: 2 },
     ]);
   });
+
+  it('moves a task downward within a bucket to the target position', () => {
+    const first = makeTask(1, 'mon', 0);
+    const second = makeTask(2, 'mon', 1);
+    const third = makeTask(3, 'mon', 2);
+    const buckets = emptyBuckets();
+    buckets.mon = [first, second, third];
+
+    const items = buildReorderItems({
+      buckets,
+      tasks: [first, second, third],
+      activeId: 1,
+      overId: 3,
+    });
+
+    expect(items).toEqual([
+      { id: 2, day: 'mon', sort_order: 0 },
+      { id: 3, day: 'mon', sort_order: 1 },
+      { id: 1, day: 'mon', sort_order: 2 },
+    ]);
+  });
 });

@@ -66,7 +66,7 @@ export function DaySection({
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
-          className="flex min-w-0 items-start gap-2 text-left cursor-pointer"
+          className="tap-target flex min-w-0 items-start gap-2 rounded-sm text-left cursor-pointer hover:text-accent"
           aria-expanded={!collapsed}
           aria-controls={listId}
         >
@@ -74,7 +74,7 @@ export function DaySection({
             className={cn('mt-1 h-3.5 w-3.5 text-ink-3 transition-transform', collapsed && '-rotate-90')}
           />
           <div className="min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-3">
+            <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-2">
               {short}
             </div>
             <div className="paper-headline truncate font-display text-2xl leading-none text-ink">
@@ -84,7 +84,7 @@ export function DaySection({
         </button>
         <div className="ml-auto flex items-center gap-2 font-mono text-[10px] text-ink-2 tabular-nums">
           <div
-            className="border border-line bg-surface/70 px-2 py-1"
+            className="control-surface px-2.5 py-1.5"
             aria-label={`${label}: ${total} görev, ${done} tamamlandı`}
           >
             {total === 0 ? '0 görev' : `${done}/${total}`}
@@ -108,7 +108,7 @@ export function DaySection({
       {!collapsed && (
         <div ref={setNodeRef} id={listId} className="flex flex-col py-2">
           <SortableContext items={tasks.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-            <div role="list" aria-label={`${label} görevleri`}>
+            <div role="list" aria-label={`${label} görevleri`} className="space-y-2 px-2">
               {tasks.map((task, idx) => (
                 <TaskRow
                   key={task.id}
@@ -124,8 +124,8 @@ export function DaySection({
 
           {tasks.length === 0 && !adding && (
             <div className="flex min-h-24 flex-col items-center justify-center gap-2 border-b border-line px-4 py-7 text-center">
-              <p className="paper-headline font-display text-sm text-ink-3">— boş —</p>
-              <p className="font-sans text-[11px] leading-6 text-ink-3">
+              <p className="paper-headline font-display text-sm text-ink-2">— boş —</p>
+              <p className="font-sans text-[11px] leading-6 text-ink-2">
                 {dayKey === 'backlog' ? 'Haftaya yerleşmemiş görevler burada görünür.' : 'Hazır olduğunda görev ekleyebilirsin.'}
               </p>
             </div>
@@ -149,7 +149,7 @@ export function DaySection({
                   }
                 }}
                 placeholder={`${label} için yeni görev…`}
-                className="w-full bg-transparent px-1.5 py-1.5 text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+                className="min-h-11 w-full bg-transparent px-1.5 py-2 text-sm text-ink placeholder:text-ink-3 focus:outline-none"
               />
               <div className="mt-2 flex items-center justify-end gap-2 text-[11px]">
                 <button
@@ -158,7 +158,7 @@ export function DaySection({
                     onAddingChange(false);
                     setDraft('');
                   }}
-                  className="px-3 py-1.5 text-ink-2 hover:bg-surface"
+                  className="tap-target px-3 py-1.5 text-ink-2 hover:bg-surface"
                   aria-label={`${label} görev eklemeyi iptal et`}
                 >
                   Vazgeç
@@ -166,7 +166,7 @@ export function DaySection({
                 <button
                   type="button"
                   onClick={submit}
-                  className="bg-accent px-3 py-1.5 font-semibold text-bg hover:bg-accent-2"
+                  className="tap-target bg-accent px-4 py-1.5 font-semibold text-bg hover:bg-accent-2"
                   aria-label={`${label} görevini ekle`}
                 >
                   Görevi ekle
@@ -178,7 +178,7 @@ export function DaySection({
               type="button"
               onClick={() => onAddingChange(true)}
               className={cn(
-                'mt-2 inline-flex items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/50 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-3 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent cursor-pointer',
+                'tap-target mt-2 inline-flex items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/60 px-3 text-[11px] font-bold uppercase tracking-[0.12em] text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent cursor-pointer',
                 tasks.length === 0 ? 'py-3' : 'mt-0.5 py-3',
               )}
               aria-label={`${label} için görev ekle`}

@@ -266,7 +266,7 @@ export default function App() {
                 <h2 id="week-board-title" className="sr-only">
                   Haftalık görevler
                 </h2>
-                <div className="grid grid-cols-1 items-start gap-x-7 gap-y-12 sm:grid-cols-2 2xl:grid-cols-3">
+                <div className="grid grid-cols-1 items-start gap-x-6 gap-y-8 sm:grid-cols-2 2xl:grid-cols-3">
                   {visibleDayKeys.map((d) => (
                     <DaySection
                       key={d}
@@ -282,7 +282,7 @@ export default function App() {
                   ))}
                 </div>
                 {hiddenEmptyDayKeys.length > 0 && (
-                  <div className="mt-8 border-t border-line pt-4">
+                  <div className="mt-6 border-t border-line pt-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3">
                         Boş gün aç
@@ -305,7 +305,7 @@ export default function App() {
 
               {showBacklog && (
                 <section
-                  className="mt-12 border border-ink bg-[color:var(--paper-tint)] p-5 pt-4"
+                  className="mt-8 border border-ink bg-[color:var(--paper-tint)] p-4 pt-3"
                   aria-labelledby="backlog-board-title"
                 >
                   <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">

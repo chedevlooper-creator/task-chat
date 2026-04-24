@@ -10,8 +10,8 @@ describe('paper theme definitions', () => {
     const theme = getPaperTheme('nightEdition');
 
     expect(theme.edition).toBe('NIGHT EDITION');
-    expect(theme.tokens['--bg-0']).toBe('#141210');
-    expect(theme.tokens['--accent-ink']).toBe('#f4a64f');
+    expect(theme.tokens['--bg-0']).toBe('#171411');
+    expect(theme.tokens['--accent-ink']).toBe('#ff9f43');
     expect(theme.isDark).toBe(true);
   });
 

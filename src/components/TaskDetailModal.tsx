@@ -45,6 +45,9 @@ export function TaskDetailModal({
   const daySelectId = `task-day-${task.id}`;
   const notesId = `task-notes-${task.id}`;
   const fileInputId = `task-files-${task.id}`;
+  const planGroupId = `task-plan-group-${task.id}`;
+  const contentGroupId = `task-content-group-${task.id}`;
+  const attachmentGroupId = `task-attachment-group-${task.id}`;
 
   useEffect(() => {
     setTitle(task.title);
@@ -163,133 +166,149 @@ export function TaskDetailModal({
           </button>
         </header>
 
-        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
-          <label htmlFor={titleInputId} className="sr-only">
-            Görev başlığı
-          </label>
-          <input
-            id={titleInputId}
-            ref={titleInputRef}
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            className="paper-headline w-full border-b border-line bg-transparent pb-2 font-display text-3xl text-ink placeholder:text-ink-3 focus:outline-none"
-            placeholder="başlık"
-          />
+        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <div className="control-surface-strong p-4">
+            <label htmlFor={titleInputId} className="sr-only">
+              Görev başlığı
+            </label>
+            <input
+              id={titleInputId}
+              ref={titleInputRef}
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="paper-headline w-full border-b border-line bg-transparent pb-2 font-display text-3xl text-ink placeholder:text-ink-3 focus:outline-none"
+              placeholder="başlık"
+            />
+          </div>
 
-          {/* meta */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <Field label="Gün" htmlFor={daySelectId}>
-              <select
-                id={daySelectId}
-                value={day ?? ''}
-                onChange={(e) => setDay((e.target.value || null) as DayKey | null)}
-                className="w-full border border-line-2 bg-surface/80 px-3 py-2.5 text-sm text-ink focus:border-accent/60 focus:ring-0"
-              >
-                <option value="">Bekleyenler</option>
-                {DAY_KEYS.map((d) => (
-                  <option key={d} value={d}>
-                    {DAY_LABELS[d]}
-                  </option>
-                ))}
-              </select>
-            </Field>
+          <section className="control-surface p-4" aria-labelledby={planGroupId}>
+            <h3 id={planGroupId} className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ink-2">
+              Plan
+            </h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <Field label="Gün" htmlFor={daySelectId}>
+                <select
+                  id={daySelectId}
+                  value={day ?? ''}
+                  onChange={(e) => setDay((e.target.value || null) as DayKey | null)}
+                  className="min-h-11 w-full border border-line-2 bg-surface/85 px-3 py-2.5 text-sm text-ink focus:border-accent/60 focus:ring-0"
+                >
+                  <option value="">Bekleyenler</option>
+                  {DAY_KEYS.map((d) => (
+                    <option key={d} value={d}>
+                      {DAY_LABELS[d]}
+                    </option>
+                  ))}
+                </select>
+              </Field>
 
-            <Field label="Öncelik">
-              <div className="flex gap-1 border border-line bg-surface/60 p-1">
-                {(['low', 'medium', 'high'] as Priority[]).map((p) => (
-                  <button
-                    key={p}
-                    type="button"
-                    onClick={() => setPriority(p)}
-                    className={cn(
-                      'flex-1 px-2 py-2 text-xs font-semibold transition',
-                      priority === p
-                        ? p === 'high'
-                          ? 'bg-danger/10 text-danger ring-1 ring-danger/20'
-                          : p === 'medium'
-                            ? 'bg-warn/10 text-warn ring-1 ring-warn/20'
-                            : 'bg-ink text-bg'
-                        : 'text-ink-2 hover:bg-surface hover:text-ink',
-                    )}
-                    aria-pressed={priority === p}
-                  >
-                    {PRIORITY_LABEL[p]}
-                  </button>
-                ))}
-              </div>
-            </Field>
-
-            <div className="sm:col-span-2">
-              <Field label="Durum">
-                <div className="grid grid-cols-1 gap-1 border border-line bg-surface/60 p-1 min-[420px]:grid-cols-3">
-                  {(['pending', 'in_progress', 'done'] as Status[]).map((s) => (
+              <Field label="Öncelik">
+                <div className="grid grid-cols-3 gap-1 border border-line bg-surface/65 p-1">
+                  {(['low', 'medium', 'high'] as Priority[]).map((p) => (
                     <button
-                      key={s}
+                      key={p}
                       type="button"
-                      onClick={() => setStatus(s)}
+                      onClick={() => setPriority(p)}
                       className={cn(
-                        'min-h-10 px-2.5 py-2 text-center text-[11px] font-semibold leading-4 transition',
-                        status === s
-                          ? s === 'done'
-                            ? 'bg-accent/10 text-accent ring-1 ring-accent/20'
-                            : s === 'in_progress'
-                              ? 'bg-info/10 text-info ring-1 ring-info/20'
-                               : 'bg-ink text-bg'
+                        'tap-target px-2 py-2 text-xs font-bold transition',
+                        priority === p
+                          ? p === 'high'
+                            ? 'bg-danger/10 text-danger ring-1 ring-danger/30'
+                            : p === 'medium'
+                              ? 'bg-warn/10 text-warn ring-1 ring-warn/30'
+                              : 'bg-ink text-bg'
                           : 'text-ink-2 hover:bg-surface hover:text-ink',
                       )}
-                      aria-pressed={status === s}
+                      aria-pressed={priority === p}
                     >
-                      {STATUS_LABEL[s]}
+                      {PRIORITY_LABEL[p]}
                     </button>
                   ))}
                 </div>
               </Field>
-            </div>
-          </div>
 
-          <Field label="Atananlar">
-            {members.length === 0 ? (
-              <div className="text-xs text-ink-3">takım panelinden üye ekle</div>
-            ) : (
-              <div className="flex flex-wrap gap-1.5">
-                {members.map((m) => {
-                  const on = assignees.includes(m.id);
-                  return (
-                    <button
-                      key={m.id}
-                      type="button"
-                      onClick={() => toggleAssignee(m.id)}
-                      className={cn(
-                        'inline-flex items-center gap-1.5 border px-2.5 py-1.5 text-xs transition',
-                        on
-                          ? 'border-accent/30 bg-accent-d text-accent'
-                          : 'border-line bg-surface text-ink-2 hover:text-ink',
-                      )}
-                      aria-pressed={on}
-                      aria-label={`${m.name} atamasını ${on ? 'kaldır' : 'ekle'}`}
-                    >
-                      <Avatar member={m} size={16} />
-                      {m.name}
-                    </button>
-                  );
-                })}
+              <div className="sm:col-span-2">
+                <Field label="Durum">
+                  <div className="grid grid-cols-1 gap-1 border border-line bg-surface/65 p-1 min-[420px]:grid-cols-3">
+                    {(['pending', 'in_progress', 'done'] as Status[]).map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setStatus(s)}
+                        className={cn(
+                          'tap-target px-2.5 py-2 text-center text-[12px] font-bold leading-4 transition',
+                          status === s
+                            ? s === 'done'
+                              ? 'bg-accent/10 text-accent ring-1 ring-accent/25'
+                              : s === 'in_progress'
+                                ? 'bg-info/10 text-info ring-1 ring-info/25'
+                                 : 'bg-ink text-bg'
+                            : 'text-ink-2 hover:bg-surface hover:text-ink',
+                        )}
+                        aria-pressed={status === s}
+                      >
+                        {STATUS_LABEL[s]}
+                      </button>
+                    ))}
+                  </div>
+                </Field>
               </div>
-            )}
-          </Field>
 
-          <Field label="Notlar" htmlFor={notesId}>
-            <textarea
-              id={notesId}
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              rows={4}
-              placeholder="notlar, bağlam, kararlar…"
-              className="w-full border border-line-2 bg-surface/80 p-3 text-sm leading-7 text-ink focus:border-accent/60 focus:ring-0"
-              style={{ resize: 'vertical' }}
-            />
-          </Field>
+              <div className="sm:col-span-2">
+                <Field label="Atananlar">
+                  {members.length === 0 ? (
+                    <div className="text-xs text-ink-3">takım panelinden üye ekle</div>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {members.map((m) => {
+                        const on = assignees.includes(m.id);
+                        return (
+                          <button
+                            key={m.id}
+                            type="button"
+                            onClick={() => toggleAssignee(m.id)}
+                            className={cn(
+                              'tap-target inline-flex items-center gap-1.5 border px-3 py-1.5 text-xs font-semibold transition',
+                              on
+                                ? 'border-accent/35 bg-accent-d text-accent'
+                                : 'border-line bg-surface text-ink-2 hover:bg-surface-2 hover:text-ink',
+                            )}
+                            aria-pressed={on}
+                            aria-label={`${m.name} atamasını ${on ? 'kaldır' : 'ekle'}`}
+                          >
+                            <Avatar member={m} size={16} />
+                            {m.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </Field>
+              </div>
+            </div>
+          </section>
 
-          <Field label={`Ekler (${task.attachments.length})`}>
+          <section className="control-surface p-4" aria-labelledby={contentGroupId}>
+            <h3 id={contentGroupId} className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ink-2">
+              İçerik
+            </h3>
+            <Field label="Notlar" htmlFor={notesId}>
+              <textarea
+                id={notesId}
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows={4}
+                placeholder="notlar, bağlam, kararlar…"
+                className="w-full border border-line-2 bg-surface/85 p-3 text-sm leading-7 text-ink focus:border-accent/60 focus:ring-0"
+                style={{ resize: 'vertical' }}
+              />
+            </Field>
+          </section>
+
+          <section className="control-surface p-4" aria-labelledby={attachmentGroupId}>
+            <h3 id={attachmentGroupId} className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-ink-2">
+              Ekler ({task.attachments.length})
+            </h3>
             <div className="space-y-1.5">
               {task.attachments.map((a) => (
                 <div
@@ -303,7 +322,7 @@ export function TaskDetailModal({
                   </span>
                   <a
                     href={`/api/attachments/${a.id}`}
-                    className="rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-ink"
+                    className="tap-target grid place-items-center rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-ink"
                     aria-label={`${a.filename} ekini indir`}
                   >
                     <Download className="h-3.5 w-3.5" aria-hidden="true" />
@@ -311,7 +330,7 @@ export function TaskDetailModal({
                   <button
                     type="button"
                     onClick={() => deleteAttachment(a.id, a.filename)}
-                    className="rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-danger"
+                    className="tap-target grid place-items-center rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-danger"
                     aria-label={`${a.filename} ekini sil`}
                   >
                     <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
@@ -324,7 +343,7 @@ export function TaskDetailModal({
                 disabled={upload.isPending}
                 aria-busy={upload.isPending}
                 aria-label="Göreve dosya yükle"
-                className="inline-flex w-full items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/40 px-3 py-3 text-xs font-semibold text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent"
+                className="tap-target inline-flex w-full items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/55 px-3 py-3 text-xs font-semibold text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent"
               >
                 <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
                 {upload.isPending ? 'yükleniyor…' : 'dosya yükle (max 10MB)'}
@@ -341,7 +360,7 @@ export function TaskDetailModal({
                 onChange={(e) => onFiles(e.target.files)}
               />
             </div>
-          </Field>
+          </section>
         </div>
 
         <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line-2 bg-surface/55 px-5 py-4">
@@ -353,7 +372,7 @@ export function TaskDetailModal({
                 onClose();
               }
             }}
-            className="tap-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-ink-2 transition hover:bg-danger/10 hover:text-danger"
+            className="tap-target inline-flex items-center gap-1.5 border border-danger/30 bg-danger/10 px-3 py-1.5 text-xs font-semibold text-danger transition hover:bg-danger/15"
             aria-label={`${task.title} görevini sil`}
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Sil
