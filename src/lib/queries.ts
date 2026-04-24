@@ -68,7 +68,10 @@ export function useReorderTasks() {
   return useMutation({
     mutationFn: (items: { id: number; day: string | null; sort_order: number }[]) =>
       api.post('/api/tasks/reorder', { items }),
-    onSettled: () => qc.invalidateQueries({ queryKey: keys.tasks }),
+    onSettled: () => {
+      qc.invalidateQueries({ queryKey: keys.tasks });
+      qc.invalidateQueries({ queryKey: keys.stats });
+    },
   });
 }
 

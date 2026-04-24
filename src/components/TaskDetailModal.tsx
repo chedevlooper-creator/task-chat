@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { X, Trash2, Paperclip, Download } from 'lucide-react';
 import type { DayKey, Member, Priority, Status, Task } from '../lib/types';
 import {
@@ -31,18 +31,20 @@ export function TaskDetailModal({
   const [priority, setPriority] = useState<Priority>(task.priority);
   const [status, setStatus] = useState<Status>(task.status);
   const [assignees, setAssignees] = useState<number[]>(task.assignee_ids);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const update = useUpdateTask();
   const del = useDeleteTask();
   const upload = useUploadAttachments();
   const delAtt = useDeleteAttachment();
-
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  const dialogTitleId = `task-dialog-title-${task.id}`;
+  const dialogDescriptionId = `task-dialog-description-${task.id}`;
+  const titleInputId = `task-title-${task.id}`;
+  const daySelectId = `task-day-${task.id}`;
+  const notesId = `task-notes-${task.id}`;
+  const fileInputId = `task-files-${task.id}`;
 
   useEffect(() => {
     setTitle(task.title);
@@ -51,6 +53,7 @@ export function TaskDetailModal({
     setPriority(task.priority);
     setStatus(task.status);
     setAssignees(task.assignee_ids);
+    titleInputRef.current?.focus();
   }, [task]);
 
   const sortedAssignees = [...assignees].sort((a, b) => a - b);
@@ -75,9 +78,48 @@ export function TaskDetailModal({
     onClose();
   };
 
-  const closeWithGuard = () => {
-    if (!isDirty || confirm('Kaydedilmemis degisiklikler kapatilacak. Devam edilsin mi?')) {
+  const closeWithGuard = useCallback(() => {
+    if (!isDirty || confirm('Kaydedilmemiş değişiklikler kapatılacak. Devam edilsin mi?')) {
       onClose();
+    }
+  }, [isDirty, onClose]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        closeWithGuard();
+        return;
+      }
+
+      if (e.key !== 'Tab' || !dialogRef.current) return;
+
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter((el) => !el.hasAttribute('hidden') && el.offsetParent !== null);
+
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [closeWithGuard]);
+
+  const deleteAttachment = (id: number, filename: string) => {
+    if (confirm(`"${filename}" eki silinsin mi?`)) {
+      delAtt.mutate(id);
     }
   };
 
@@ -87,46 +129,61 @@ export function TaskDetailModal({
   const onFiles = (files: FileList | null) => {
     if (!files || files.length === 0) return;
     upload.mutate({ taskId: task.id, files: Array.from(files) });
+    if (fileInput.current) fileInput.current.value = '';
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center animate-fadeUp sm:items-center sm:p-4"
-      role="dialog"
-      aria-modal="true"
       onMouseDown={(e) => e.target === e.currentTarget && closeWithGuard()}
     >
-      <div className="absolute inset-0 bg-slate-950/35 backdrop-blur-[3px]" />
-      <div className="glass-strong relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] pb-safe shadow-modal sm:max-h-[90vh] sm:max-w-xl sm:rounded-[28px]">
-        <header className="flex items-center justify-between border-b border-line px-5 py-4">
-          <div className="text-[11px] uppercase tracking-[0.16em] text-ink-3">
-            Gorev #{task.id}
-          </div>
+      <div className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]" aria-hidden="true" />
+      <div
+        ref={dialogRef}
+        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden border-2 border-ink bg-surface pb-safe shadow-modal sm:max-h-[90vh] sm:max-w-xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={dialogTitleId}
+        aria-describedby={dialogDescriptionId}
+      >
+        <header className="flex items-center justify-between border-b border-line-2 px-5 py-4">
+          <h2 id={dialogTitleId} className="text-[11px] uppercase tracking-[0.16em] text-ink-3">
+            Görev #{task.id}
+          </h2>
+          <p id={dialogDescriptionId} className="sr-only">
+            Görev başlığını, gününü, önceliğini, durumunu, atananlarını, notlarını ve eklerini düzenle.
+          </p>
           <button
             type="button"
             onClick={closeWithGuard}
-            className="tap-target grid place-items-center rounded-full p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
-            aria-label="kapat"
+            className="tap-target grid place-items-center rounded-sm p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
+            aria-label="Görev düzenleme panelini kapat"
           >
-            <X className="h-4 w-4" />
+            <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </header>
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+          <label htmlFor={titleInputId} className="sr-only">
+            Görev başlığı
+          </label>
           <input
+            id={titleInputId}
+            ref={titleInputRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-transparent font-display text-2xl font-semibold text-ink placeholder:text-ink-3 focus:outline-none"
+            className="w-full bg-transparent font-display text-3xl italic text-ink placeholder:text-ink-3 focus:outline-none"
             placeholder="başlık"
           />
 
           {/* meta */}
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-            <Field label="Gün">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+            <Field label="Gün" htmlFor={daySelectId}>
               <select
+                id={daySelectId}
                 value={day ?? ''}
                 onChange={(e) => setDay((e.target.value || null) as DayKey | null)}
-                className="w-full rounded-[16px] border border-line bg-surface px-3 py-2.5 text-sm focus:border-info/30 focus:ring-0"
+                className="w-full border border-line-2 bg-surface px-3 py-2.5 text-sm focus:border-accent/60 focus:ring-0"
               >
                 <option value="">Bekleyenler</option>
                 {DAY_KEYS.map((d) => (
@@ -138,22 +195,23 @@ export function TaskDetailModal({
             </Field>
 
             <Field label="Öncelik">
-              <div className="glass-soft flex gap-1 rounded-[16px] p-1">
+              <div className="flex gap-1 border border-line bg-surface/60 p-1">
                 {(['low', 'medium', 'high'] as Priority[]).map((p) => (
                   <button
                     key={p}
                     type="button"
                     onClick={() => setPriority(p)}
                     className={cn(
-                      'flex-1 rounded-full px-2 py-2 text-xs font-medium transition',
+                      'flex-1 px-2 py-2 text-xs font-semibold transition',
                       priority === p
                         ? p === 'high'
                           ? 'bg-danger/10 text-danger ring-1 ring-danger/20'
                           : p === 'medium'
                             ? 'bg-warn/10 text-warn ring-1 ring-warn/20'
-                            : 'bg-surface text-ink ring-1 ring-line'
+                            : 'bg-ink text-surface'
                         : 'text-ink-2 hover:bg-surface hover:text-ink',
                     )}
+                    aria-pressed={priority === p}
                   >
                     {PRIORITY_LABEL[p]}
                   </button>
@@ -161,29 +219,32 @@ export function TaskDetailModal({
               </div>
             </Field>
 
-            <Field label="Durum">
-              <div className="glass-soft flex gap-1 rounded-[16px] p-1">
-                {(['pending', 'in_progress', 'done'] as Status[]).map((s) => (
-                  <button
-                    key={s}
-                    type="button"
-                    onClick={() => setStatus(s)}
-                    className={cn(
-                      'flex-1 rounded-full px-2 py-2 text-xs font-medium transition',
-                      status === s
-                        ? s === 'done'
-                          ? 'bg-accent/10 text-accent ring-1 ring-accent/20'
-                          : s === 'in_progress'
-                            ? 'bg-info/10 text-info ring-1 ring-info/20'
-                            : 'bg-surface text-ink ring-1 ring-line'
-                        : 'text-ink-2 hover:bg-surface hover:text-ink',
-                    )}
-                  >
-                    {STATUS_LABEL[s]}
-                  </button>
-                ))}
-              </div>
-            </Field>
+            <div className="sm:col-span-2">
+              <Field label="Durum">
+                <div className="grid grid-cols-1 gap-1 border border-line bg-surface/60 p-1 min-[420px]:grid-cols-3">
+                  {(['pending', 'in_progress', 'done'] as Status[]).map((s) => (
+                    <button
+                      key={s}
+                      type="button"
+                      onClick={() => setStatus(s)}
+                      className={cn(
+                        'min-h-10 px-2.5 py-2 text-center text-[11px] font-semibold leading-4 transition',
+                        status === s
+                          ? s === 'done'
+                            ? 'bg-accent/10 text-accent ring-1 ring-accent/20'
+                            : s === 'in_progress'
+                              ? 'bg-info/10 text-info ring-1 ring-info/20'
+                              : 'bg-ink text-surface'
+                          : 'text-ink-2 hover:bg-surface hover:text-ink',
+                      )}
+                      aria-pressed={status === s}
+                    >
+                      {STATUS_LABEL[s]}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+            </div>
           </div>
 
           <Field label="Atananlar">
@@ -199,11 +260,13 @@ export function TaskDetailModal({
                       type="button"
                       onClick={() => toggleAssignee(m.id)}
                       className={cn(
-                        'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs ring-1 transition',
+                        'inline-flex items-center gap-1.5 border px-2.5 py-1.5 text-xs transition',
                         on
-                          ? 'bg-info/10 text-info ring-info/20'
-                          : 'bg-surface text-ink-2 ring-line hover:text-ink',
+                          ? 'border-accent/30 bg-accent-d text-accent'
+                          : 'border-line bg-surface text-ink-2 hover:text-ink',
                       )}
+                      aria-pressed={on}
+                      aria-label={`${m.name} atamasını ${on ? 'kaldır' : 'ekle'}`}
                     >
                       <Avatar member={m} size={16} />
                       {m.name}
@@ -214,13 +277,14 @@ export function TaskDetailModal({
             )}
           </Field>
 
-          <Field label="Notlar">
+          <Field label="Notlar" htmlFor={notesId}>
             <textarea
+              id={notesId}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="notlar, bağlam, kararlar…"
-              className="w-full rounded-[16px] border border-line bg-surface p-3 text-sm leading-7 focus:border-info/30 focus:ring-0"
+              className="w-full border border-line-2 bg-surface p-3 text-sm leading-7 focus:border-accent/60 focus:ring-0"
               style={{ resize: 'vertical' }}
             />
           </Field>
@@ -230,39 +294,46 @@ export function TaskDetailModal({
               {task.attachments.map((a) => (
                 <div
                   key={a.id}
-                  className="glass-soft flex items-center gap-2 rounded-[18px] px-3 py-2"
+                  className="flex items-center gap-2 border-b border-line px-1 py-2"
                 >
-                  <Paperclip className="h-3.5 w-3.5 text-ink-2" />
+                  <Paperclip className="h-3.5 w-3.5 text-ink-2" aria-hidden="true" />
                   <span className="min-w-0 flex-1 truncate text-xs text-ink">{a.filename}</span>
                   <span className="text-[10px] tabular-nums text-ink-3">
                     {Math.round(a.size / 1024)} KB
                   </span>
                   <a
                     href={`/api/attachments/${a.id}`}
-                    className="rounded-full p-1.5 text-ink-2 hover:bg-surface hover:text-ink"
-                    aria-label="indir"
+                    className="rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-ink"
+                    aria-label={`${a.filename} ekini indir`}
                   >
-                    <Download className="h-3.5 w-3.5" />
+                    <Download className="h-3.5 w-3.5" aria-hidden="true" />
                   </a>
                   <button
                     type="button"
-                    onClick={() => delAtt.mutate(a.id)}
-                    className="rounded-full p-1.5 text-ink-2 hover:bg-surface hover:text-danger"
-                    aria-label="sil"
+                    onClick={() => deleteAttachment(a.id, a.filename)}
+                    className="rounded-sm p-1.5 text-ink-2 hover:bg-surface hover:text-danger"
+                    aria-label={`${a.filename} ekini sil`}
                   >
-                    <Trash2 className="h-3.5 w-3.5" />
+                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                   </button>
                 </div>
               ))}
               <button
                 type="button"
                 onClick={() => fileInput.current?.click()}
-                className="inline-flex w-full items-center justify-center gap-1.5 rounded-[18px] border border-dashed border-line px-3 py-3 text-xs text-ink-2 transition hover:border-info/40 hover:text-info"
+                disabled={upload.isPending}
+                aria-busy={upload.isPending}
+                aria-label="Göreve dosya yükle"
+                className="inline-flex w-full items-center justify-center gap-1.5 border border-dashed border-line-2 px-3 py-3 text-xs font-semibold text-ink-2 transition hover:border-accent/60 hover:text-accent"
               >
-                <Paperclip className="h-3.5 w-3.5" />
+                <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
                 {upload.isPending ? 'yükleniyor…' : 'dosya yükle (max 10MB)'}
               </button>
+              <label htmlFor={fileInputId} className="sr-only">
+                Ek dosyaları seç
+              </label>
               <input
+                id={fileInputId}
                 ref={fileInput}
                 type="file"
                 multiple
@@ -273,34 +344,37 @@ export function TaskDetailModal({
           </Field>
         </div>
 
-        <footer className="flex items-center justify-between gap-2 border-t border-line px-5 py-4">
+        <footer className="flex items-center justify-between gap-2 border-t border-line-2 px-5 py-4">
           <button
             type="button"
             onClick={() => {
-              if (confirm('Bu görev silinsin mi?')) {
+              if (confirm(`"${task.title}" görevi silinsin mi?`)) {
                 del.mutate(task.id);
                 onClose();
               }
             }}
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-ink-2 transition hover:bg-rose-50 hover:text-danger"
+            className="tap-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-ink-2 transition hover:bg-rose-50 hover:text-danger"
+            aria-label={`${task.title} görevini sil`}
           >
-            <Trash2 className="h-3.5 w-3.5" /> sil
+            <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Sil
           </button>
           <div className="flex gap-2">
             <button
               type="button"
               onClick={closeWithGuard}
-              className="rounded-full px-3 py-1.5 text-xs text-ink-2 hover:bg-surface-2"
+              className="px-3 py-1.5 text-xs text-ink-2 hover:bg-surface-2"
+              aria-label={`${task.title} görevindeki düzenlemeyi kapat`}
             >
-              kapat
+              Kapat
             </button>
             <button
               type="button"
               onClick={saveAndClose}
               disabled={!isDirty}
-              className="rounded-full bg-info px-4 py-1.5 text-xs font-semibold text-white shadow-[0_18px_34px_-24px_rgba(37,99,235,0.55)] transition hover:bg-blue-700 disabled:opacity-45 disabled:hover:bg-info"
+              className="bg-accent px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-accent-2 disabled:opacity-45 disabled:hover:bg-accent"
+              aria-label={`${task.title} görevindeki değişiklikleri kaydet`}
             >
-              kaydet
+              Kaydet
             </button>
           </div>
         </footer>
@@ -309,12 +383,26 @@ export function TaskDetailModal({
   );
 }
 
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
+function Field({
+  label,
+  htmlFor,
+  children,
+}: {
+  label: string;
+  htmlFor?: string;
+  children: React.ReactNode;
+}) {
+  const labelClass = 'mb-1.5 block text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-2';
+
   return (
     <div>
-      <div className="mb-1.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-ink-2">
-        {label}
-      </div>
+      {htmlFor ? (
+        <label htmlFor={htmlFor} className={labelClass}>
+          {label}
+        </label>
+      ) : (
+        <div className={labelClass}>{label}</div>
+      )}
       {children}
     </div>
   );

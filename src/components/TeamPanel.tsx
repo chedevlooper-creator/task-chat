@@ -40,41 +40,54 @@ export function TeamPanel() {
     setColor(randomColor());
   };
 
+  const deleteMember = (id: number, memberName: string) => {
+    if (confirm(`${memberName} ekipten çıkarılsın mı? Atanmış görevlerdeki kişi bilgisi de kaldırılır.`)) {
+      del.mutate(id);
+    }
+  };
+
+  const nameInputId = 'team-member-name';
+
   return (
-    <section className="glass rounded-[24px] p-4 sm:p-5">
-      <header className="mb-4 flex items-center gap-2">
-        <Users className="h-4 w-4 text-info" />
-        <h2 className="font-display text-lg font-semibold tracking-tight">Takım</h2>
-        <span className="ml-auto rounded-full border border-line bg-surface px-2.5 py-1 text-[11px] text-ink-3">{members.length} üye</span>
+    <section className="border-t-2 border-ink pt-3">
+      <header className="mb-3 flex items-center gap-2">
+        <Users className="h-4 w-4 text-info" aria-hidden="true" />
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.24em] text-ink-3">Takım</h2>
+        <span className="ml-auto border border-line bg-surface px-2 py-1 text-[10px] text-ink-3">{members.length} üye</span>
       </header>
 
       <form onSubmit={submit} className="mb-4 flex items-center gap-2">
         <button
           type="button"
           onClick={() => setColor(randomColor())}
-          className="h-9 w-9 shrink-0 rounded-full border border-white/70 shadow-[0_10px_18px_-14px_rgba(15,23,42,0.24)]"
+          className="h-9 w-9 shrink-0 border border-line-2"
           style={{ background: color }}
-          aria-label="renk"
+          aria-label="Yeni üye rengini değiştir"
         />
+        <label htmlFor={nameInputId} className="sr-only">
+          Yeni üye adı
+        </label>
         <input
+          id={nameInputId}
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="yeni üye adı…"
-          className="flex-1 rounded-[16px] border border-line bg-surface px-3 py-2.5 text-sm focus:border-info/30 focus:ring-0"
+          className="flex-1 border border-line-2 bg-surface/80 px-3 py-2.5 text-sm focus:border-accent/60 focus:ring-0"
         />
         <button
           type="submit"
-          className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] bg-info text-white shadow-[0_16px_30px_-20px_rgba(37,99,235,0.45)] hover:bg-blue-700"
-          aria-label="üye ekle"
+          disabled={create.isPending || name.trim().length === 0}
+          className="inline-flex h-9 w-9 shrink-0 items-center justify-center bg-accent text-white hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+          aria-label="Yeni üyeyi takıma ekle"
         >
-          <UserPlus className="h-3.5 w-3.5" />
+          <UserPlus className="h-3.5 w-3.5" aria-hidden="true" />
         </button>
       </form>
 
-      <ul className="space-y-1">
+      <ul>
         {members.length === 0 && (
-          <li className="rounded-[18px] border border-dashed border-line bg-surface-2 py-4 text-center text-xs text-ink-3">
-            Takimda henuz uye yok.
+          <li className="border border-dashed border-line py-4 text-center text-xs text-ink-3">
+            Takımda henüz üye yok.
           </li>
         )}
         {members.map((m) => {
@@ -82,7 +95,7 @@ export function TeamPanel() {
           return (
             <li
               key={m.id}
-              className="group glass-soft row-hover flex items-center gap-3 rounded-[18px] px-3 py-2.5"
+              className="group row-hover flex items-center gap-3 border-b border-line py-2.5"
             >
               <Avatar member={m} size={24} />
               <div className="min-w-0 flex-1">
@@ -93,11 +106,12 @@ export function TeamPanel() {
               </div>
               <button
                 type="button"
-                onClick={() => del.mutate(m.id)}
-                className="rounded-full p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger group-hover:opacity-100"
-                aria-label={`${m.name} sil`}
+                onClick={() => deleteMember(m.id, m.name)}
+                disabled={del.isPending}
+                className="tap-target rounded-sm p-1.5 text-ink-3 opacity-70 transition hover:bg-surface hover:text-danger disabled:opacity-35 group-hover:opacity-100"
+                aria-label={`${m.name} üyesini sil`}
               >
-                <Trash2 className="h-3.5 w-3.5" />
+                <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
               </button>
             </li>
           );

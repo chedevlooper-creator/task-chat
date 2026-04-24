@@ -4,33 +4,33 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: '#f4f7fb',
-        surface: '#ffffff',
-        'surface-2': '#f8fafc',
-        'surface-3': '#eef2f7',
-        'surface-4': '#e2e8f0',
+        bg: '#f5efe5',
+        surface: '#fffaf1',
+        'surface-2': '#f7f0e5',
+        'surface-3': '#eee4d5',
+        'surface-4': '#ded2bf',
 
-        ink: '#0f172a',
-        'ink-2': '#334155',
-        'ink-3': '#64748b',
-        'ink-4': '#94a3b8',
+        ink: '#221d16',
+        'ink-2': '#4b4034',
+        'ink-3': '#7a6b5b',
+        'ink-4': '#a0917f',
 
-        line: '#dbe5f0',
-        'line-2': '#cbd5e1',
-        'line-3': '#94a3b8',
+        line: '#d1c4b2',
+        'line-2': '#8f806d',
+        'line-3': '#4f4638',
 
-        accent: '#059669',
-        'accent-2': '#047857',
-        'accent-d': '#ecfdf5',
+        accent: '#c9430c',
+        'accent-2': '#9f3206',
+        'accent-d': '#fff0e5',
 
-        warn: '#d97706',
+        warn: '#b85b0b',
         danger: '#dc2626',
-        info: '#2563eb',
-        ok: '#059669',
+        info: '#221d16',
+        ok: '#15803d',
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['Newsreader', 'Georgia', 'ui-serif', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {
@@ -52,10 +52,10 @@ export default {
         '3xl': '32px',
       },
       boxShadow: {
-        pop: '0 16px 36px -24px rgba(15, 23, 42, 0.28)',
-        modal: '0 30px 80px -30px rgba(15, 23, 42, 0.32)',
-        focus: '0 0 0 3px rgba(37, 99, 235, 0.18)',
-        glass: '0 20px 44px -28px rgba(15, 23, 42, 0.2)',
+        pop: '0 18px 38px -30px rgba(34, 29, 22, 0.28)',
+        modal: '0 30px 80px -36px rgba(34, 29, 22, 0.42)',
+        focus: '0 0 0 3px rgba(201, 67, 12, 0.18)',
+        glass: 'none',
       },
       transitionTimingFunction: {
         spring: 'cubic-bezier(.2, .8, .2, 1)',

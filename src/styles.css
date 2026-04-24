@@ -1,17 +1,18 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600;6..72,700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
   color-scheme: light;
-  --bg-0: #f8fbff;
-  --bg-1: #f4f7fb;
-  --bg-2: #eef3f9;
-  --line: rgba(148, 163, 184, 0.24);
-  --line-strong: rgba(148, 163, 184, 0.34);
-  --glass: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(248, 250, 252, 0.98));
-  --glass-strong: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(247, 250, 252, 1));
+  --bg-0: #f5efe5;
+  --bg-1: #efe7da;
+  --bg-2: #e7ddcf;
+  --line: rgba(38, 32, 24, 0.22);
+  --line-strong: rgba(38, 32, 24, 0.64);
+  --paper: rgba(245, 239, 229, 0.9);
+  --paper-strong: rgba(250, 245, 236, 0.94);
+  --accent-ink: #c9430c;
 }
 
 * { -webkit-tap-highlight-color: transparent; }
@@ -19,14 +20,15 @@
 html,
 body {
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 26%),
-    radial-gradient(circle at top right, rgba(5, 150, 105, 0.08), transparent 22%),
-    linear-gradient(180deg, var(--bg-0) 0%, var(--bg-1) 52%, var(--bg-2) 100%);
-  color: #0f172a;
+    linear-gradient(90deg, rgba(38, 32, 24, 0.035) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(38, 32, 24, 0.028) 1px, transparent 1px),
+    linear-gradient(135deg, var(--bg-0) 0%, var(--bg-1) 58%, var(--bg-2) 100%);
+  background-size: 34px 34px, 34px 34px, auto;
+  color: #221d16;
   font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
   font-weight: 400;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -53,15 +55,19 @@ body::after {
 
 body::before {
   background:
-    linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
-  background-size: 120px 120px;
-  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 72%);
-  opacity: 0.2;
+    repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.16) 0,
+      rgba(255, 255, 255, 0.16) 1px,
+      transparent 1px,
+      transparent 5px
+    );
+  mix-blend-mode: multiply;
+  opacity: 0.22;
 }
 
 body::after {
-  background: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.76), transparent 55%);
+  display: none;
 }
 
 #root {
@@ -71,8 +77,8 @@ body::after {
 
 @layer base {
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', ui-sans-serif, system-ui, sans-serif;
-    letter-spacing: -0.03em;
+    font-family: 'Newsreader', Georgia, ui-serif, serif;
+    letter-spacing: 0;
   }
 
   code,
@@ -101,8 +107,8 @@ body::after {
   }
 
   ::selection {
-    background: rgba(37, 99, 235, 0.18);
-    color: #0f172a;
+    background: rgba(201, 67, 12, 0.18);
+    color: #221d16;
   }
 }
 
@@ -110,47 +116,31 @@ body::after {
   .glass {
     position: relative;
     border: 1px solid var(--line);
-    background: var(--glass);
-    box-shadow: 0 16px 38px -28px rgba(15, 23, 42, 0.24);
+    background: var(--paper);
+    box-shadow: none;
   }
 
   .glass::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0));
-    opacity: 0.78;
-    pointer-events: none;
+    display: none;
   }
 
   .glass-strong {
     position: relative;
     border: 1px solid var(--line-strong);
-    background: var(--glass-strong);
-    box-shadow:
-      0 24px 56px -34px rgba(15, 23, 42, 0.26),
-      inset 0 1px 0 rgba(255, 255, 255, 0.72);
+    background: var(--paper-strong);
+    box-shadow: none;
   }
 
   .glass-strong::before,
   .glass-soft::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0));
-    opacity: 0.8;
-    pointer-events: none;
+    display: none;
   }
 
   .glass-soft {
     position: relative;
-    border: 1px solid rgba(203, 213, 225, 0.9);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(248, 250, 252, 0.96));
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.82),
-      0 12px 28px -28px rgba(15, 23, 42, 0.24);
+    border: 1px solid var(--line);
+    background: rgba(250, 245, 236, 0.58);
+    box-shadow: none;
   }
 
   .card {
@@ -189,31 +179,28 @@ body::after {
 
   .hover-lift {
     transition:
-      transform 220ms cubic-bezier(.2, .8, .2, 1),
       border-color 220ms cubic-bezier(.2, .8, .2, 1),
-      box-shadow 220ms cubic-bezier(.2, .8, .2, 1),
       background-color 220ms cubic-bezier(.2, .8, .2, 1);
   }
 
   .hover-lift:hover {
-    transform: translateY(-2px);
-    border-color: rgba(148, 163, 184, 0.42);
-    box-shadow: 0 22px 40px -28px rgba(15, 23, 42, 0.26);
+    border-color: rgba(38, 32, 24, 0.46);
+    background-color: rgba(250, 245, 236, 0.78);
   }
 
   .section-chip {
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    border-radius: 999px;
-    border: 1px solid rgba(203, 213, 225, 0.88);
-    background: rgba(255, 255, 255, 0.92);
-    padding: 0.5rem 0.85rem;
-    color: #475569;
-    font-size: 11px;
+    border-radius: 0;
+    border: 0;
+    background: transparent;
+    padding: 0;
+    color: rgba(34, 29, 22, 0.62);
+    font-size: 10px;
     font-weight: 600;
     line-height: 1;
-    letter-spacing: 0.02em;
+    letter-spacing: 0.22em;
   }
 
   button:not(:disabled) { cursor: pointer; }
@@ -236,8 +223,8 @@ body::after {
   }
 
   .row-hover:hover {
-    background: rgba(248, 250, 252, 0.92);
-    border-color: rgba(148, 163, 184, 0.42);
+    background: rgba(255, 250, 241, 0.62);
+    border-color: rgba(38, 32, 24, 0.34);
   }
 }
 
@@ -255,9 +242,9 @@ body::after {
 }
 
 :focus-visible {
-  outline: 2px solid rgba(37, 99, 235, 0.85);
+  outline: 2px solid rgba(201, 67, 12, 0.86);
   outline-offset: 2px;
-  border-radius: 14px;
+  border-radius: 6px;
 }
 
 .skip-link {
@@ -266,10 +253,10 @@ body::after {
   left: 12px;
   z-index: 100;
   padding: 10px 16px;
-  border-radius: 999px;
-  border: 1px solid #dbe5f0;
-  background: #ffffff;
-  color: #0f172a;
+  border-radius: 4px;
+  border: 1px solid rgba(38, 32, 24, 0.58);
+  background: #fffaf1;
+  color: #221d16;
   font-weight: 600;
   box-shadow: 0 14px 24px -18px rgba(15, 23, 42, 0.25);
   transition: top 180ms cubic-bezier(.2, .8, .2, 1);
