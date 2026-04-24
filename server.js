@@ -6,6 +6,12 @@ import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
+import {
+  buildOpenclawCommand,
+  buildOpenclawReply,
+  isOpenclawAgentEnabled,
+  openclawDisabledReply,
+} from './server/openclawBridge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
@@ -304,13 +310,6 @@ app.get('/api/messages', (_req, res) => {
   res.json(db.prepare('SELECT * FROM messages ORDER BY id ASC').all());
 });
 
-// Warm-up: pre-start a session so first real request is faster
-const warmup = spawn('openclaw', ['agent', '--json', '--session-id', 'task-chat-warmup', '-m', 'Ok'], {
-  env: { ...process.env, OPENCLAW_GATEWAY_PORT: '18789' },
-});
-warmup.on('error', () => {});
-warmup.stdin?.end();
-
 function runOpenclaw(message) {
   return new Promise((resolve) => {
     const args = [
@@ -318,17 +317,20 @@ function runOpenclaw(message) {
       '--session-id', 'task-chat-web',
       '-m', message,
     ];
-    const proc = spawn('openclaw', args, {
+    const openclaw = buildOpenclawCommand(args, process.env, process.execPath, fs.existsSync);
+    const proc = spawn(openclaw.command, openclaw.args, {
       env: { ...process.env, OPENCLAW_GATEWAY_PORT: '18789' },
+      stdio: ['ignore', 'pipe', 'pipe'],
     });
     let stdout = '';
     let stderr = '';
-    const timer = setTimeout(() => {
-      proc.kill('SIGTERM');
-      resolve({ code: -1, reply: '', stderr: 'timeout (55s)' });
-    }, 55000);
     proc.stdout.on('data', (d) => (stdout += d.toString()));
     proc.stderr.on('data', (d) => (stderr += d.toString()));
+    proc.on('error', (err) => console.error('[openclaw error]', err.message));
+    const timer = setTimeout(() => {
+      proc.kill('SIGTERM');
+      resolve({ code: -1, reply: '', stderr: 'timeout (60s)' });
+    }, 60000);
     proc.on('close', (code) => {
       clearTimeout(timer);
       let reply = extractReply(stdout);
@@ -340,6 +342,8 @@ function runOpenclaw(message) {
     });
   });
 }
+
+let openclawInFlight = false;
 
 // openclaw --json stdout can be a single JSON object or NDJSON (one JSON per line
 // with intermediate tool/stream events). Extract the best user-facing text.
@@ -426,8 +430,23 @@ app.post('/api/chat', async (req, res) => {
     return res.json({ reply });
   }
 
-  const { code, reply, stderr } = await runOpenclaw(text);
-  const finalReply = reply || (code === 0 ? '(boş yanıt)' : `OpenClaw hata: ${stderr || 'kod=' + code}`);
+  if (!isOpenclawAgentEnabled()) {
+    const finalReply = openclawDisabledReply();
+    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
+    return res.json({ reply: finalReply, code: -1 });
+  }
+
+  if (openclawInFlight) {
+    const finalReply = 'OpenClaw hala önceki mesajı işliyor. Birkaç saniye sonra tekrar dene.';
+    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
+    return res.json({ reply: finalReply, code: -1 });
+  }
+
+  openclawInFlight = true;
+  const { code, reply, stderr } = await runOpenclaw(text).finally(() => {
+    openclawInFlight = false;
+  });
+  const finalReply = buildOpenclawReply({ code, reply, stderr });
   db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
   res.json({ reply: finalReply, code });
 });
@@ -442,9 +461,6 @@ if (fs.existsSync(DIST_DIR)) {
 
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
-
-// Warm up OpenClaw session once at startup
-runOpenclaw('Ok').catch(() => {});
 
 app.listen(PORT, '127.0.0.1', () => {
   console.log(`task-chat server on http://127.0.0.1:${PORT}`);

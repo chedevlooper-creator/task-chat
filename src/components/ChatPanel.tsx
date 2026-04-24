@@ -108,9 +108,9 @@ export function ChatPanel() {
             <div ref={streamRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-sm">
               {messages.length === 0 && (
                 <div className="border border-line bg-surface/70 p-3 text-xs leading-6 text-ink-2">
-                  OpenClaw hazır. <code className="text-ink">/add</code>,{' '}
+                  Lokal komutlar hazır. <code className="text-ink">/add</code>,{' '}
                   <code className="text-ink">/done</code>,{' '}
-                  <code className="text-ink">/tasks</code> dene veya doğal dilde yaz.
+                  <code className="text-ink">/tasks</code> dene. Doğal dil için OpenClaw agent onayı gerekir.
                 </div>
               )}
               {messages.map((m) => (
