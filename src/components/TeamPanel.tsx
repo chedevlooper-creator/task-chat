@@ -51,7 +51,7 @@ export function TeamPanel() {
   const nameInputId = 'team-member-name';
 
   return (
-    <section>
+    <section className="paper-panel pt-3">
       <header className="mb-2 flex items-baseline gap-2">
         <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
           Takım

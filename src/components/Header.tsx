@@ -116,12 +116,12 @@ export function Header({
     <header className="no-print relative z-10 px-4 pb-4 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pt-7">
       <div className="mx-auto max-w-[1400px]">
         {/* Masthead rail */}
-        <div className="grid grid-cols-3 items-baseline border-b border-ink pb-3 font-mono text-[11px] tracking-[0.14em] text-ink">
+        <div className="grid grid-cols-1 gap-2 border-b border-ink pb-3 text-center font-mono text-[11px] tracking-[0.14em] text-ink sm:grid-cols-3 sm:items-baseline sm:text-left">
           <span>{mastheadLabel(now, paperTheme)}</span>
           <span className="justify-self-center font-bold uppercase text-accent">
             {paperTheme.edition}
           </span>
-          <span className="justify-self-end">{issueLabel(now)}</span>
+          <span className="sm:justify-self-end">{issueLabel(now)}</span>
         </div>
 
         {/* Title */}
@@ -129,12 +129,7 @@ export function Header({
           <div className="font-sans text-[10px] font-medium uppercase tracking-[0.4em] text-ink-3">
             Task Chat — Operasyon Panosu
           </div>
-          <h1
-            className={cn(
-              'mt-3 font-display text-[3.2rem] leading-none text-ink sm:text-[5rem]',
-              paperTheme.titleItalic ? 'italic' : 'not-italic font-semibold tracking-[-0.02em]',
-            )}
-          >
+          <h1 className="paper-headline mt-3 font-display text-[3.2rem] leading-none text-ink sm:text-[5rem]">
             Haftalık Planlayıcı
           </h1>
           <p className="mx-auto mt-3 max-w-xl font-sans text-xs leading-6 text-ink-2 sm:text-[13px]">
@@ -156,9 +151,9 @@ export function Header({
                 İlerleme
               </div>
               <div className="mt-1 flex items-baseline gap-3">
-                <div className="font-display text-[44px] italic leading-none tabular-nums text-accent">
-                  %{progress}
-                </div>
+              <div className="paper-headline font-display text-[44px] leading-none tabular-nums text-accent">
+                %{progress}
+              </div>
                 <div className="font-sans text-[11px] text-ink-3">tamamlandı</div>
               </div>
               <div

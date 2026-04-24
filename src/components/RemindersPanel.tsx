@@ -40,7 +40,7 @@ export function RemindersPanel() {
   const bodyId = 'reminder-body';
 
   return (
-    <section>
+    <section className="paper-panel pt-3">
       <header className="mb-2 flex items-baseline gap-2">
         <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
           Hatırlatıcılar
@@ -118,7 +118,7 @@ export function RemindersPanel() {
             )}
           >
             <div className="flex items-baseline justify-between gap-3">
-              <div className="font-display text-[14px] italic leading-snug text-ink">
+              <div className="paper-headline font-display text-[14px] leading-snug text-ink">
                 {r.title}
               </div>
               <div className="font-mono text-[10px] tabular-nums text-accent">

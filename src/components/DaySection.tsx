@@ -57,12 +57,12 @@ export function DaySection({
   return (
     <section
       className={cn(
-        'relative flex flex-col border-t-2 border-ink pt-3 transition duration-300',
+        'paper-panel relative flex flex-col scroll-mt-24 px-0 pt-3 transition duration-300',
         isOver && 'bg-accent-d/50 outline outline-1 outline-accent/50',
       )}
     >
       {/* header */}
-      <header className="relative flex items-start gap-3 border-b-2 border-ink pb-2">
+      <header className="relative flex items-start gap-3 border-b-2 border-ink pb-3">
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
@@ -77,12 +77,12 @@ export function DaySection({
             <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-3">
               {short}
             </div>
-            <div className="truncate font-display text-2xl italic leading-none text-ink">
+            <div className="paper-headline truncate font-display text-2xl leading-none text-ink">
               {label}
             </div>
           </div>
         </button>
-        <div className="ml-auto flex items-center gap-2 text-[10px] text-ink-2 tabular-nums">
+        <div className="ml-auto flex items-center gap-2 font-mono text-[10px] text-ink-2 tabular-nums">
           <div
             className="border border-line bg-surface/70 px-2 py-1"
             aria-label={`${label}: ${total} görev, ${done} tamamlandı`}
@@ -124,7 +124,7 @@ export function DaySection({
 
           {tasks.length === 0 && !adding && (
             <div className="flex min-h-24 flex-col items-center justify-center gap-2 border-b border-line px-4 py-7 text-center">
-              <p className="font-display text-sm italic text-ink-3">— boş —</p>
+              <p className="paper-headline font-display text-sm text-ink-3">— boş —</p>
               <p className="font-sans text-[11px] leading-6 text-ink-3">
                 {dayKey === 'backlog' ? 'Haftaya yerleşmemiş görevler burada görünür.' : 'Hazır olduğunda görev ekleyebilirsin.'}
               </p>
@@ -166,7 +166,7 @@ export function DaySection({
                 <button
                   type="button"
                   onClick={submit}
-            className="bg-accent px-3 py-1.5 font-semibold text-bg hover:bg-accent-2"
+                  className="bg-accent px-3 py-1.5 font-semibold text-bg hover:bg-accent-2"
                   aria-label={`${label} görevini ekle`}
                 >
                   Görevi ekle

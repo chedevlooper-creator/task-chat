@@ -64,11 +64,14 @@ export function TaskRow({
   const doneLooks = task.status === 'done';
 
   return (
-    <div id={`task-${task.id}`} role="listitem" aria-live="polite"
+    <div
+      id={`task-${task.id}`}
+      role="listitem"
+      aria-live="polite"
       ref={setNodeRef}
       style={sortableStyle}
       className={cn(
-        'group relative flex items-start gap-2 border-b border-line px-4 py-3.5 transition duration-200 cursor-pointer task-row-enter animate-fadeUp hover:bg-surface/45',
+        'task-row-enter group relative flex cursor-pointer items-start gap-2 border-b border-line px-3 py-3.5 transition duration-200 animate-fadeUp hover:bg-surface/45',
         doneLooks && 'opacity-90',
       )}
     >

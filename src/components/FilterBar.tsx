@@ -44,9 +44,9 @@ export function FilterBar({
   const hasAdvancedFilters = status !== 'all' || priorities.length > 0 || search.trim().length > 0;
 
   return (
-    <div className="no-print sticky top-0 z-20 px-4 pb-4 pt-0 sm:px-6 lg:px-8">
+    <div className="no-print sticky top-0 z-20 border-y border-line bg-[color:var(--paper)] px-4 pb-3 pt-3 backdrop-blur-sm sm:px-6 lg:px-8">
       <div className="mx-auto max-w-[1400px]">
-        <div className="border-b border-line-2 py-2">
+        <div>
           <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
             <div className="grid min-w-0 flex-1 grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 sm:flex sm:gap-3">
               <span className="hidden shrink-0 text-[10px] font-bold uppercase tracking-[0.24em] text-ink-3 sm:inline">

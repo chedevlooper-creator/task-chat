@@ -70,7 +70,7 @@ export function ChatPanel() {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={cn(
-          'no-print fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 border-2 border-ink bg-surface px-4 text-xs font-bold uppercase tracking-[0.12em] text-ink shadow-pop transition hover:bg-surface-2 active:scale-[0.98] tap-target lg:bottom-5',
+          'no-print fixed bottom-20 right-4 z-40 inline-flex h-11 items-center gap-2 border-2 border-ink bg-[color:var(--paper-strong)] px-4 text-xs font-bold uppercase tracking-[0.12em] text-ink shadow-pop transition hover:bg-surface-2 active:scale-[0.98] tap-target lg:bottom-5',
         )}
         aria-label={open ? 'chat kapat' : 'chat aç'}
       >
@@ -84,7 +84,7 @@ export function ChatPanel() {
           role="dialog"
           aria-label="OpenClaw chat"
         >
-          <div className="flex h-[min(82vh,640px)] flex-col overflow-hidden border-2 border-ink bg-surface pb-safe shadow-modal sm:h-[min(70vh,600px)]">
+          <div className="flex h-[min(82vh,640px)] flex-col overflow-hidden border-2 border-ink bg-[color:var(--paper-strong)] pb-safe shadow-modal sm:h-[min(70vh,600px)]">
             <header className="flex items-center gap-2 border-b border-line-2 px-4 py-4">
               <div className="grid h-8 w-8 place-items-center border border-line bg-surface-2">
                 <MessageSquare className="h-3.5 w-3.5 text-info" />
@@ -145,7 +145,7 @@ export function ChatPanel() {
                 </div>
               )}
               {send.isError && (
-                <div className="border border-danger/20 bg-rose-50 px-3 py-2 text-xs leading-6 text-danger" role="alert">
+                <div className="border border-danger/25 bg-danger/10 px-3 py-2 text-xs leading-6 text-danger" role="alert">
                   Mesaj gönderilemedi. Bağlantıyı veya OpenClaw kurulumunu kontrol edip tekrar dene.
                 </div>
               )}
@@ -172,7 +172,7 @@ export function ChatPanel() {
               <button
                 type="submit"
                 disabled={send.isPending || text.trim().length === 0}
-          className="tap-target grid h-11 w-11 shrink-0 place-items-center bg-accent text-bg shadow-pop transition hover:bg-accent-2 disabled:opacity-40"
+                className="tap-target grid h-11 w-11 shrink-0 place-items-center bg-accent text-bg shadow-pop transition hover:bg-accent-2 disabled:opacity-40"
                 aria-label="gönder"
               >
                 <Send className="h-4 w-4" />

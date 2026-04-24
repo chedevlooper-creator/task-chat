@@ -137,18 +137,18 @@ export function TaskDetailModal({
       className="fixed inset-0 z-50 flex items-end justify-center animate-fadeUp sm:items-center sm:p-4"
       onMouseDown={(e) => e.target === e.currentTarget && closeWithGuard()}
     >
-      <div className="absolute inset-0 bg-ink/35 backdrop-blur-[2px]" aria-hidden="true" />
+      <div className="absolute inset-0 bg-ink/40 backdrop-blur-[2px]" aria-hidden="true" />
       <div
         ref={dialogRef}
-        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden border-2 border-ink bg-surface pb-safe shadow-modal sm:max-h-[90vh] sm:max-w-xl"
+        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden border-2 border-ink bg-[color:var(--paper-strong)] pb-safe shadow-modal sm:max-h-[90vh] sm:max-w-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby={dialogTitleId}
         aria-describedby={dialogDescriptionId}
       >
-        <header className="flex items-center justify-between border-b border-line-2 px-5 py-4">
-          <h2 id={dialogTitleId} className="text-[11px] uppercase tracking-[0.16em] text-ink-3">
-            Görev #{task.id}
+        <header className="grid grid-cols-[1fr_auto] items-start gap-3 border-b border-line-2 px-5 py-4">
+          <h2 id={dialogTitleId} className="font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-ink-3">
+            Task File · #{task.id}
           </h2>
           <p id={dialogDescriptionId} className="sr-only">
             Görev başlığını, gününü, önceliğini, durumunu, atananlarını, notlarını ve eklerini düzenle.
@@ -156,14 +156,14 @@ export function TaskDetailModal({
           <button
             type="button"
             onClick={closeWithGuard}
-            className="tap-target grid place-items-center rounded-sm p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
+            className="tap-target -m-1 grid place-items-center rounded-sm p-1.5 text-ink-2 hover:bg-surface-2 hover:text-ink"
             aria-label="Görev düzenleme panelini kapat"
           >
             <X className="h-4 w-4" aria-hidden="true" />
           </button>
         </header>
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-5">
+        <div className="flex-1 space-y-5 overflow-y-auto px-5 py-5">
           <label htmlFor={titleInputId} className="sr-only">
             Görev başlığı
           </label>
@@ -172,7 +172,7 @@ export function TaskDetailModal({
             ref={titleInputRef}
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            className="w-full bg-transparent font-display text-3xl italic text-ink placeholder:text-ink-3 focus:outline-none"
+            className="paper-headline w-full border-b border-line bg-transparent pb-2 font-display text-3xl text-ink placeholder:text-ink-3 focus:outline-none"
             placeholder="başlık"
           />
 
@@ -183,7 +183,7 @@ export function TaskDetailModal({
                 id={daySelectId}
                 value={day ?? ''}
                 onChange={(e) => setDay((e.target.value || null) as DayKey | null)}
-                className="w-full border border-line-2 bg-surface px-3 py-2.5 text-sm focus:border-accent/60 focus:ring-0"
+                className="w-full border border-line-2 bg-surface/80 px-3 py-2.5 text-sm text-ink focus:border-accent/60 focus:ring-0"
               >
                 <option value="">Bekleyenler</option>
                 {DAY_KEYS.map((d) => (
@@ -208,7 +208,7 @@ export function TaskDetailModal({
                           ? 'bg-danger/10 text-danger ring-1 ring-danger/20'
                           : p === 'medium'
                             ? 'bg-warn/10 text-warn ring-1 ring-warn/20'
-                            : 'bg-ink text-surface'
+                            : 'bg-ink text-bg'
                         : 'text-ink-2 hover:bg-surface hover:text-ink',
                     )}
                     aria-pressed={priority === p}
@@ -234,7 +234,7 @@ export function TaskDetailModal({
                             ? 'bg-accent/10 text-accent ring-1 ring-accent/20'
                             : s === 'in_progress'
                               ? 'bg-info/10 text-info ring-1 ring-info/20'
-                              : 'bg-ink text-surface'
+                               : 'bg-ink text-bg'
                           : 'text-ink-2 hover:bg-surface hover:text-ink',
                       )}
                       aria-pressed={status === s}
@@ -284,7 +284,7 @@ export function TaskDetailModal({
               onChange={(e) => setNotes(e.target.value)}
               rows={4}
               placeholder="notlar, bağlam, kararlar…"
-              className="w-full border border-line-2 bg-surface p-3 text-sm leading-7 focus:border-accent/60 focus:ring-0"
+              className="w-full border border-line-2 bg-surface/80 p-3 text-sm leading-7 text-ink focus:border-accent/60 focus:ring-0"
               style={{ resize: 'vertical' }}
             />
           </Field>
@@ -324,7 +324,7 @@ export function TaskDetailModal({
                 disabled={upload.isPending}
                 aria-busy={upload.isPending}
                 aria-label="Göreve dosya yükle"
-                className="inline-flex w-full items-center justify-center gap-1.5 border border-dashed border-line-2 px-3 py-3 text-xs font-semibold text-ink-2 transition hover:border-accent/60 hover:text-accent"
+                className="inline-flex w-full items-center justify-center gap-1.5 border border-dashed border-line-2 bg-surface/40 px-3 py-3 text-xs font-semibold text-ink-2 transition hover:border-accent/60 hover:bg-accent-d hover:text-accent"
               >
                 <Paperclip className="h-3.5 w-3.5" aria-hidden="true" />
                 {upload.isPending ? 'yükleniyor…' : 'dosya yükle (max 10MB)'}
@@ -344,7 +344,7 @@ export function TaskDetailModal({
           </Field>
         </div>
 
-        <footer className="flex items-center justify-between gap-2 border-t border-line-2 px-5 py-4">
+        <footer className="flex flex-wrap items-center justify-between gap-2 border-t border-line-2 bg-surface/55 px-5 py-4">
           <button
             type="button"
             onClick={() => {
@@ -353,7 +353,7 @@ export function TaskDetailModal({
                 onClose();
               }
             }}
-            className="tap-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-ink-2 transition hover:bg-rose-50 hover:text-danger"
+            className="tap-target inline-flex items-center gap-1.5 px-3 py-1.5 text-xs text-ink-2 transition hover:bg-danger/10 hover:text-danger"
             aria-label={`${task.title} görevini sil`}
           >
             <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Sil
@@ -371,7 +371,7 @@ export function TaskDetailModal({
               type="button"
               onClick={saveAndClose}
               disabled={!isDirty}
-              className="bg-accent px-4 py-1.5 text-xs font-semibold text-bg transition hover:bg-accent-2 disabled:opacity-45 disabled:hover:bg-accent"
+              className="min-h-10 bg-accent px-4 py-1.5 text-xs font-semibold text-bg transition hover:bg-accent-2 disabled:opacity-45 disabled:hover:bg-accent"
               aria-label={`${task.title} görevindeki değişiklikleri kaydet`}
             >
               Kaydet

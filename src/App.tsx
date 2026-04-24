@@ -192,8 +192,8 @@ export default function App() {
         visibleCount={visibleCount}
       />
 
-      <main id="main" className="relative z-10 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
+      <main id="main" className="relative z-10 px-4 pb-10 sm:px-6 lg:px-8 lg:pb-16">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-10 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Week grid */}
           <div className={cn(mobileView === 'week' ? 'block' : 'hidden lg:block')}>
             {boardLoadState === 'loading' ? (
@@ -266,7 +266,7 @@ export default function App() {
                     <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
                       Backlog
                     </p>
-                    <div className="mt-1 font-display text-2xl italic text-ink">
+                    <div className="paper-headline mt-1 font-display text-2xl text-ink">
                       {backlogCount} görev
                     </div>
                     <h2 id="backlog-board-title" className="sr-only">
@@ -309,7 +309,7 @@ export default function App() {
           {/* Side panels */}
           <aside
             className={cn(
-              'flex flex-col gap-6 border-t-2 border-ink pt-3',
+              'flex flex-col gap-7 border-t-2 border-ink pt-3 lg:sticky lg:top-24 lg:self-start lg:border-l lg:border-t-0 lg:border-line lg:pl-5',
               mobileView === 'week' && 'hidden lg:flex',
               mobileView === 'team' && 'flex lg:flex',
               mobileView === 'notes' && 'flex lg:flex',
@@ -392,7 +392,7 @@ function NavBtn({
       className={cn(
         'tap-target flex flex-col items-center justify-center gap-1 px-3 py-2.5 text-[11px] font-bold uppercase tracking-[0.12em] transition duration-200',
         active
-          ? 'bg-ink text-surface'
+          ? 'bg-ink text-bg'
           : 'text-ink-2 hover:bg-surface-2 hover:text-ink',
       )}
       aria-pressed={active}
