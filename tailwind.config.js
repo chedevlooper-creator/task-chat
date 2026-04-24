@@ -1,36 +1,39 @@
+const colorVar = (name, fallbackOpacity = '1') => ({ opacityValue }) =>
+  `rgb(var(${name}) / ${opacityValue ?? fallbackOpacity})`;
+
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
       colors: {
-        bg: '#f5efe5',
-        surface: '#fffaf1',
-        'surface-2': '#f7f0e5',
-        'surface-3': '#eee4d5',
-        'surface-4': '#ded2bf',
+        bg: colorVar('--bg-0-rgb'),
+        surface: colorVar('--surface-rgb'),
+        'surface-2': colorVar('--surface-2-rgb'),
+        'surface-3': colorVar('--surface-3-rgb'),
+        'surface-4': colorVar('--surface-4-rgb'),
 
-        ink: '#221d16',
-        'ink-2': '#4b4034',
-        'ink-3': '#7a6b5b',
-        'ink-4': '#a0917f',
+        ink: colorVar('--ink-rgb'),
+        'ink-2': colorVar('--ink-2-rgb'),
+        'ink-3': colorVar('--ink-3-rgb'),
+        'ink-4': colorVar('--ink-4-rgb'),
 
-        line: '#d1c4b2',
-        'line-2': '#8f806d',
-        'line-3': '#4f4638',
+        line: colorVar('--ink-rgb', '0.15'),
+        'line-2': colorVar('--ink-rgb', '0.34'),
+        'line-3': colorVar('--ink-rgb', '0.64'),
 
-        accent: '#c9430c',
-        'accent-2': '#9f3206',
-        'accent-d': '#fff0e5',
+        accent: colorVar('--accent-rgb'),
+        'accent-2': colorVar('--accent-2-rgb'),
+        'accent-d': colorVar('--accent-tint-rgb'),
 
-        warn: '#b85b0b',
-        danger: '#dc2626',
-        info: '#221d16',
-        ok: '#15803d',
+        warn: colorVar('--warn-rgb'),
+        danger: colorVar('--danger-rgb'),
+        info: colorVar('--info-rgb'),
+        ok: colorVar('--ok-rgb'),
       },
       fontFamily: {
         sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['Newsreader', 'Georgia', 'ui-serif', 'serif'],
+        display: ['"Source Serif 4"', '"Source Serif Pro"', 'Newsreader', 'Georgia', 'ui-serif', 'serif'],
         mono: ['"JetBrains Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
       },
       fontSize: {

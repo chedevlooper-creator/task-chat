@@ -172,7 +172,7 @@ export function ChatPanel() {
               <button
                 type="submit"
                 disabled={send.isPending || text.trim().length === 0}
-                className="tap-target grid h-11 w-11 shrink-0 place-items-center bg-accent text-white shadow-pop transition hover:bg-accent-2 disabled:opacity-40"
+          className="tap-target grid h-11 w-11 shrink-0 place-items-center bg-accent text-bg shadow-pop transition hover:bg-accent-2 disabled:opacity-40"
                 aria-label="gönder"
               >
                 <Send className="h-4 w-4" />

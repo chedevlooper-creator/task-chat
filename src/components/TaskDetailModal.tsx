@@ -371,7 +371,7 @@ export function TaskDetailModal({
               type="button"
               onClick={saveAndClose}
               disabled={!isDirty}
-              className="bg-accent px-4 py-1.5 text-xs font-semibold text-white transition hover:bg-accent-2 disabled:opacity-45 disabled:hover:bg-accent"
+              className="bg-accent px-4 py-1.5 text-xs font-semibold text-bg transition hover:bg-accent-2 disabled:opacity-45 disabled:hover:bg-accent"
               aria-label={`${task.title} görevindeki değişiklikleri kaydet`}
             >
               Kaydet

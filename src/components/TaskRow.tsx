@@ -55,7 +55,7 @@ export function TaskRow({
 
   const priorityStripe =
     task.priority === 'high'
-      ? 'bg-danger'
+      ? 'bg-accent'
       : task.priority === 'medium'
         ? 'bg-warn'
         : 'bg-ink-4';
@@ -68,7 +68,7 @@ export function TaskRow({
       ref={setNodeRef}
       style={sortableStyle}
       className={cn(
-        'group relative flex items-start gap-2 border-b border-line px-1 py-3 transition duration-200 cursor-pointer task-row-enter animate-fadeUp hover:bg-surface/45',
+        'group relative flex items-start gap-2 border-b border-line px-4 py-3.5 transition duration-200 cursor-pointer task-row-enter animate-fadeUp hover:bg-surface/45',
         doneLooks && 'opacity-90',
       )}
     >
@@ -81,7 +81,7 @@ export function TaskRow({
       {/* drag handle */}
       <button
         type="button"
-        className="tap-target -m-1 mt-0.5 rounded-sm p-1 text-ink-4 opacity-60 transition touch-none md:opacity-0 group-hover:bg-surface group-hover:opacity-100 focus-visible:bg-surface focus-visible:opacity-100 active:cursor-grabbing cursor-grab"
+        className="tap-target -m-1 mt-0.5 grid shrink-0 place-items-center rounded-sm p-1 text-ink-2 opacity-80 transition touch-none md:opacity-70 group-hover:bg-surface group-hover:opacity-100 focus-visible:bg-surface focus-visible:opacity-100 active:cursor-grabbing cursor-grab"
         aria-label={`${task.title} görevini taşımak için sürükle`}
         title={`${task.title} görevini taşı`}
         {...attributes}

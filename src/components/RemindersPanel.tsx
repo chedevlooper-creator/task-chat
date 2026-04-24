@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { StickyNote, Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus } from 'lucide-react';
 import {
   useCreateReminder,
   useDeleteReminder,
   useReminders,
 } from '../lib/queries';
+import { cn } from '../lib/utils';
+
+function relativeMark(createdAt: number): string {
+  const days = Math.max(1, Math.round((Date.now() - createdAt) / 86400000));
+  return `T+${days}g`;
+}
 
 export function RemindersPanel() {
   const { data: reminders = [] } = useReminders();
@@ -34,14 +40,15 @@ export function RemindersPanel() {
   const bodyId = 'reminder-body';
 
   return (
-    <section className="border-t-2 border-ink pt-3">
-      <header className="mb-3 flex items-center gap-2">
-        <StickyNote className="h-4 w-4 text-warn" aria-hidden="true" />
-        <h2 className="text-[10px] font-bold uppercase tracking-[0.24em] text-ink-3">Hatırlatıcılar</h2>
+    <section>
+      <header className="mb-2 flex items-baseline gap-2">
+        <h2 className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+          Hatırlatıcılar
+        </h2>
         <button
           type="button"
           onClick={() => setOpen((v) => !v)}
-          className="ml-auto inline-flex items-center gap-1 border border-line-2 bg-surface px-2.5 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-ink-2 hover:bg-surface-2 hover:text-ink"
+          className="ml-auto inline-flex items-center gap-1 border border-line-2 bg-surface px-2.5 py-1.5 font-sans text-[10px] font-semibold uppercase tracking-[0.12em] text-ink-2 hover:bg-surface-2 hover:text-ink"
           aria-expanded={open}
           aria-controls="reminder-form"
           aria-label="Yeni hatırlatıcı ekle"
@@ -51,7 +58,7 @@ export function RemindersPanel() {
       </header>
 
       {open && (
-        <form id="reminder-form" onSubmit={submit} className="mb-4 space-y-2 border border-line bg-surface/60 p-3">
+        <form id="reminder-form" onSubmit={submit} className="mb-3 space-y-2 border border-line bg-surface/60 p-3">
           <label htmlFor={titleId} className="sr-only">
             Hatırlatıcı başlığı
           </label>
@@ -61,7 +68,7 @@ export function RemindersPanel() {
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             placeholder="başlık"
-            className="w-full bg-transparent text-sm text-ink placeholder:text-ink-3 focus:outline-none"
+            className="w-full bg-transparent font-sans text-sm text-ink placeholder:text-ink-3 focus:outline-none"
           />
           <label htmlFor={bodyId} className="sr-only">
             Hatırlatıcı detayı
@@ -72,7 +79,7 @@ export function RemindersPanel() {
             onChange={(e) => setBody(e.target.value)}
             placeholder="detay (opsiyonel)"
             rows={2}
-            className="w-full bg-transparent text-xs leading-6 text-ink-2 placeholder:text-ink-3 focus:outline-none"
+            className="w-full bg-transparent font-sans text-xs leading-6 text-ink-2 placeholder:text-ink-3 focus:outline-none"
             style={{ resize: 'vertical' }}
           />
           <div className="flex justify-end gap-2 text-[11px]">
@@ -87,7 +94,7 @@ export function RemindersPanel() {
             <button
               type="submit"
               disabled={create.isPending || title.trim().length === 0}
-              className="bg-accent px-3 py-1.5 font-semibold text-white hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
+              className="bg-accent px-3 py-1.5 font-sans font-semibold text-bg hover:bg-accent-2 disabled:opacity-40 disabled:hover:bg-accent"
               aria-label="Hatırlatıcıyı kaydet"
             >
               Hatırlatıcıyı kaydet
@@ -96,20 +103,30 @@ export function RemindersPanel() {
         </form>
       )}
 
-      <ul>
+      <ul className="border-t border-ink">
         {reminders.length === 0 && (
-          <li className="border border-dashed border-line py-4 text-center text-xs text-ink-3">
+          <li className="py-4 text-center font-sans text-xs text-ink-3">
             Henüz not eklenmedi.
           </li>
         )}
-        {reminders.map((r) => (
+        {reminders.map((r, idx) => (
           <li
             key={r.id}
-            className="group row-hover relative border-b border-line py-3 pr-8"
+            className={cn(
+              'group row-hover relative py-3 pr-8',
+              idx !== reminders.length - 1 && 'border-b border-line',
+            )}
           >
-            <div className="pr-6 text-sm font-medium text-ink">{r.title}</div>
+            <div className="flex items-baseline justify-between gap-3">
+              <div className="font-display text-[14px] italic leading-snug text-ink">
+                {r.title}
+              </div>
+              <div className="font-mono text-[10px] tabular-nums text-accent">
+                {relativeMark(r.created_at)}
+              </div>
+            </div>
             {r.body && (
-              <div className="whitespace-pre-wrap pr-6 text-xs leading-6 text-ink-2">
+              <div className="mt-1 whitespace-pre-wrap pr-6 font-sans text-[11px] leading-6 text-ink-2">
                 {r.body}
               </div>
             )}

@@ -62,7 +62,7 @@ export function DaySection({
       )}
     >
       {/* header */}
-      <header className="relative flex items-start gap-3 border-b border-line-2 pb-2">
+      <header className="relative flex items-start gap-3 border-b-2 border-ink pb-2">
         <button
           type="button"
           onClick={() => setCollapsed((v) => !v)}
@@ -124,10 +124,8 @@ export function DaySection({
 
           {tasks.length === 0 && !adding && (
             <div className="flex min-h-24 flex-col items-center justify-center gap-2 border-b border-line px-4 py-7 text-center">
-              <p className="text-sm font-medium text-ink-2">
-                {dayKey === 'backlog' ? 'Havuz boş.' : 'Bu gün boş.'}
-              </p>
-              <p className="text-xs leading-6 text-ink-3">
+              <p className="font-display text-sm italic text-ink-3">— boş —</p>
+              <p className="font-sans text-[11px] leading-6 text-ink-3">
                 {dayKey === 'backlog' ? 'Haftaya yerleşmemiş görevler burada görünür.' : 'Hazır olduğunda görev ekleyebilirsin.'}
               </p>
             </div>
@@ -168,7 +166,7 @@ export function DaySection({
                 <button
                   type="button"
                   onClick={submit}
-                  className="bg-accent px-3 py-1.5 font-semibold text-white hover:bg-accent-2"
+            className="bg-accent px-3 py-1.5 font-semibold text-bg hover:bg-accent-2"
                   aria-label={`${label} görevini ekle`}
                 >
                   Görevi ekle

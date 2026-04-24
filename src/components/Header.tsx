@@ -3,6 +3,7 @@ import { Wifi, WifiOff } from 'lucide-react';
 import { DAY_KEYS } from '../lib/types';
 import { useStats } from '../lib/queries';
 import { cn } from '../lib/utils';
+import { PAPER_THEME_KEYS, PAPER_THEMES, type PaperTheme, type PaperThemeKey } from '../lib/paperTheme';
 
 function getIsoWeek(date: Date) {
   const utc = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -17,29 +18,68 @@ function issueLabel(date: Date) {
   return `HAFTA ${getIsoWeek(date)} · ${month.toLocaleUpperCase('tr-TR')} ${date.getFullYear()}`;
 }
 
+function mastheadLabel(date: Date, theme: PaperTheme) {
+  const week = getIsoWeek(date);
+  if (theme.masthead === 'issue') return `ISSUE №${week}`;
+
+  const year = date.getFullYear() % 100;
+  const vol = year - 2;
+  return `VOL. ${vol} · NO. ${week}`;
+}
+
 function MetricCell({
   label,
   value,
-  hint,
-  emphasis = false,
 }: {
   label: string;
   value: number | string;
-  hint?: string;
-  emphasis?: boolean;
 }) {
   return (
-    <div className="min-h-[74px] px-3 py-3 sm:border-l sm:first:border-l-0">
-      <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-ink-3">{label}</div>
-      <div
-        className={cn(
-          'mt-2 font-display text-[2rem] leading-none text-ink tabular-nums',
-          emphasis && 'text-accent',
-        )}
-      >
+    <div className="min-h-[74px] border-r border-line px-4 py-4 last:border-r-0">
+      <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+        {label}
+      </div>
+      <div className="mt-1 font-display text-[44px] leading-none tabular-nums text-ink">
         {value}
       </div>
-      {hint && <div className="mt-1 text-[11px] leading-5 text-ink-3">{hint}</div>}
+    </div>
+  );
+}
+
+function EditionSelector({
+  active,
+  onChange,
+}: {
+  active: PaperThemeKey;
+  onChange: (key: PaperThemeKey) => void;
+}) {
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 border-b border-line px-3 py-3">
+      <span className="font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-3">
+        Paper & Ink
+      </span>
+      <div className="inline-flex flex-wrap justify-center border border-line-2 bg-surface/70 p-1" role="group" aria-label="Paper & Ink edisyonu">
+        {PAPER_THEME_KEYS.map((key) => {
+          const theme = PAPER_THEMES[key];
+          const selected = active === key;
+          return (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onChange(key)}
+              className={cn(
+                'tap-target min-h-10 px-3 py-2 font-sans text-[10px] font-bold uppercase tracking-[0.14em] transition',
+                selected
+                  ? 'bg-ink text-bg'
+                  : 'text-ink-3 hover:bg-accent-d hover:text-accent',
+              )}
+              aria-pressed={selected}
+            >
+              {theme.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -49,11 +89,17 @@ export function Header({
   visibleCount,
   membersCount,
   backlogCount,
+  paperTheme,
+  themeKey,
+  onThemeChange,
 }: {
   totalCount: number;
   visibleCount: number;
   membersCount: number;
   backlogCount: number;
+  paperTheme: PaperTheme;
+  themeKey: PaperThemeKey;
+  onThemeChange: (key: PaperThemeKey) => void;
 }) {
   const { data: stats } = useStats();
   const fetching = useIsFetching();
@@ -69,40 +115,76 @@ export function Header({
   return (
     <header className="no-print relative z-10 px-4 pb-4 pt-4 sm:px-6 sm:pt-5 lg:px-8 lg:pt-7">
       <div className="mx-auto max-w-[1400px]">
-        <div className="flex items-center justify-between border-b-2 border-t-2 border-ink py-2 text-[10px] font-bold uppercase tracking-[0.24em] text-ink-2">
-          <span>VOL. 24 · NO. 17</span>
-          <span>{issueLabel(now)}</span>
+        {/* Masthead rail */}
+        <div className="grid grid-cols-3 items-baseline border-b border-ink pb-3 font-mono text-[11px] tracking-[0.14em] text-ink">
+          <span>{mastheadLabel(now, paperTheme)}</span>
+          <span className="justify-self-center font-bold uppercase text-accent">
+            {paperTheme.edition}
+          </span>
+          <span className="justify-self-end">{issueLabel(now)}</span>
         </div>
 
-        <div className="py-5 text-center sm:py-6">
-          <div className="text-[10px] font-bold uppercase tracking-[0.32em] text-ink-4">
-            Task Chat · Operasyon Panosu
+        {/* Title */}
+        <div className="border-b border-ink py-7 text-center sm:py-8">
+          <div className="font-sans text-[10px] font-medium uppercase tracking-[0.4em] text-ink-3">
+            Task Chat — Operasyon Panosu
           </div>
-          <h1 className="mt-2 font-display text-[3.2rem] italic leading-none text-ink sm:text-[5rem]">
+          <h1
+            className={cn(
+              'mt-3 font-display text-[3.2rem] leading-none text-ink sm:text-[5rem]',
+              paperTheme.titleItalic ? 'italic' : 'not-italic font-semibold tracking-[-0.02em]',
+            )}
+          >
             Haftalık Planlayıcı
           </h1>
-          <p className="mx-auto mt-2 max-w-xl text-xs leading-6 text-ink-2 sm:text-sm">
+          <p className="mx-auto mt-3 max-w-xl font-sans text-xs leading-6 text-ink-2 sm:text-[13px]">
             Takım görevlerini tek bir sayfada topla ve haftayı okunabilir bir düzende kur.
           </p>
         </div>
 
-        <div className="border-b-2 border-t-2 border-ink">
-          <div className="grid grid-cols-2 sm:grid-cols-5">
-            <MetricCell label="Toplam görev" value={total} hint={`${plannedDays}/7 gün planlı`} />
+        <EditionSelector active={themeKey} onChange={onThemeChange} />
+
+        {/* Stats rail */}
+        <div className="border-b border-ink">
+          <div className="grid grid-cols-2 sm:grid-cols-[repeat(4,1fr)_1.4fr]">
+            <MetricCell label="Toplam görev" value={total} />
             <MetricCell label="Tamamlanan" value={done} />
             <MetricCell label="Devam eden" value={inProgress} />
             <MetricCell label="Bekliyor" value={pending} />
-            <MetricCell label="İlerleme" value={`%${progress}`} hint="tamamlandı" emphasis />
+            <div className="col-span-2 px-4 py-4 sm:col-span-1">
+              <div className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+                İlerleme
+              </div>
+              <div className="mt-1 flex items-baseline gap-3">
+                <div className="font-display text-[44px] italic leading-none tabular-nums text-accent">
+                  %{progress}
+                </div>
+                <div className="font-sans text-[11px] text-ink-3">tamamlandı</div>
+              </div>
+              <div
+                className="mt-3 h-[4px] bg-[color:var(--rule-thin)]"
+                role="progressbar"
+                aria-valuenow={progress}
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-label={`İlerleme: ${progress} yüzde`}
+              >
+                <div
+                  className="h-full bg-accent transition-[width] duration-500"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line-2 px-3 py-2 text-[11px] text-ink-3">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line px-4 py-2 font-sans text-[11px] text-ink-3">
             <span>
               {isFiltered
                 ? `${visibleCount} / ${totalCount} görev görünür`
-                : `${membersCount} üye · ${backlogCount} görev bekliyor`}
+                : `${membersCount} üye · ${backlogCount} görev havuzda · ${plannedDays}/7 gün planlı`}
             </span>
             <span
               className={cn(
-                'inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em]',
+                'inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.18em]',
                 fetching > 0 ? 'text-warn' : 'text-ink-3',
               )}
               aria-live="polite"

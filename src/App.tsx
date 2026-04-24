@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -32,8 +32,11 @@ import { DAY_KEYS, type DayKey, type Member, type Priority, type Status, type Ta
 import { cn } from './lib/utils';
 import { getBoardLoadState } from './lib/boardState';
 import { buildReorderItems, type BoardBucket, type BoardBuckets } from './lib/taskBoard';
+import { getPaperTheme, type PaperThemeKey } from './lib/paperTheme';
 
 type MobileView = 'week' | 'team' | 'notes';
+
+const THEME_STORAGE_KEY = 'task-chat-paper-theme';
 
 const dndAccessibility = {
   screenReaderInstructions: {
@@ -61,6 +64,24 @@ export default function App() {
   const [mobileView, setMobileView] = useState<MobileView>('week');
   const [activeDrag, setActiveDrag] = useState<Task | null>(null);
   const [activeComposer, setActiveComposer] = useState<BoardBucket | null>(null);
+  const [themeKey, setThemeKey] = useState<PaperThemeKey>(() => {
+    if (typeof window === 'undefined') return 'daily';
+    return getPaperTheme(window.localStorage.getItem(THEME_STORAGE_KEY)).key;
+  });
+  const paperTheme = useMemo(() => getPaperTheme(themeKey), [themeKey]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    Object.entries(paperTheme.tokens).forEach(([name, value]) => {
+      root.style.setProperty(name, value);
+    });
+    root.dataset.paperTheme = paperTheme.key;
+    root.style.colorScheme = paperTheme.colorScheme;
+
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, paperTheme.key);
+    } catch {}
+  }, [paperTheme]);
 
   const membersById = useMemo(
     () => Object.fromEntries(members.map((m) => [m.id, m])) as Record<number, Member>,
@@ -145,7 +166,7 @@ export default function App() {
 
   // ---------- Render ----------
   return (
-    <div className="relative min-h-screen overflow-hidden pb-32">
+    <div className="relative min-h-screen overflow-hidden pb-32" data-paper-theme={paperTheme.key}>
       <a href="#main" className="skip-link">
         İçeriğe geç
       </a>
@@ -156,6 +177,9 @@ export default function App() {
         visibleCount={visibleCount}
         membersCount={members.length}
         backlogCount={backlogCount}
+        paperTheme={paperTheme}
+        themeKey={themeKey}
+        onThemeChange={setThemeKey}
       />
       <FilterBar
         search={search}
@@ -169,7 +193,7 @@ export default function App() {
       />
 
       <main id="main" className="relative z-10 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
           {/* Week grid */}
           <div className={cn(mobileView === 'week' ? 'block' : 'hidden lg:block')}>
             {boardLoadState === 'loading' ? (
@@ -190,7 +214,7 @@ export default function App() {
                     void refetchTasks();
                     void refetchMembers();
                   }}
-                  className="mt-5 bg-accent px-4 py-2 text-xs font-semibold text-white transition hover:bg-accent-2"
+                  className="mt-5 bg-accent px-4 py-2 text-xs font-semibold text-bg transition hover:bg-accent-2"
                 >
                   Yeniden dene
                 </button>
@@ -233,15 +257,23 @@ export default function App() {
                 </div>
               </section>
 
-              <section className="mt-12 border-t-2 border-ink pt-4" aria-labelledby="backlog-board-title">
-                <div className="mb-4 flex flex-wrap items-end justify-between gap-3 border-b border-line-2 pb-3">
+              <section
+                className="mt-12 border border-ink bg-[color:var(--paper-tint)] p-5 pt-4"
+                aria-labelledby="backlog-board-title"
+              >
+                <div className="mb-4 flex flex-wrap items-baseline justify-between gap-3 border-b border-line pb-3">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-ink-3">Görev havuzu</p>
+                    <p className="font-sans text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-3">
+                      Backlog
+                    </p>
+                    <div className="mt-1 font-display text-2xl italic text-ink">
+                      {backlogCount} görev
+                    </div>
                     <h2 id="backlog-board-title" className="sr-only">
                       Bekleyen görev havuzu
                     </h2>
                   </div>
-                  <p className="max-w-md text-xs leading-6 text-ink-2">
+                  <p className="max-w-md font-sans text-xs leading-6 text-ink-2">
                     Henüz haftaya yerleştirilmeyen işleri burada tut.
                   </p>
                 </div>
@@ -277,15 +309,15 @@ export default function App() {
           {/* Side panels */}
           <aside
             className={cn(
-              'space-y-5',
-              mobileView === 'week' && 'hidden lg:block',
-              mobileView === 'team' && 'block lg:block',
-              mobileView === 'notes' && 'block lg:block',
+              'flex flex-col gap-6 border-t-2 border-ink pt-3',
+              mobileView === 'week' && 'hidden lg:flex',
+              mobileView === 'team' && 'flex lg:flex',
+              mobileView === 'notes' && 'flex lg:flex',
             )}
             aria-label="Yan paneller"
           >
             {mobileView !== 'week' && (
-              <div className="border border-line bg-surface/70 px-3 py-2 text-xs text-ink-2 lg:hidden">
+              <div className="border border-line bg-surface/70 px-3 py-2 font-sans text-xs text-ink-2 lg:hidden">
                 {mobileView === 'team' ? 'Takım görünümü açık' : 'Notlar görünümü açık'}
               </div>
             )}
