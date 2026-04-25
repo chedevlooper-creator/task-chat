@@ -1,0 +1,31 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "dist/**",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "server.js",
+      "use": "@vercel/node",
+      "config": {
+        "regions": ["fra1"]
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/(.*)",
+      "dest": "/server.js"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/dist/$1"
+    }
+  ],
+  "env": {
+    "TASK_CHAT_ENABLE_OPENCLAW_AGENT": "@task_chat_enable_openclaw_agent",
+    "OPENCLAW_GATEWAY_TOKEN": "@openclaw_gateway_token",
+    "OPENCLAW_GATEWAY_URL": "@openclaw_gateway_url"
+  }
+}

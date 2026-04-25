@@ -24,6 +24,9 @@ app.use(express.json({ limit: '2mb' }));
 const dbPath = process.env.TASK_CHAT_DB_PATH || path.join(__dirname, 'data.db');
 const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
+db.pragma('synchronous = NORMAL');
+db.pragma('cache_size = -64000');
+db.pragma('temp_store = MEMORY');
 
 // Base tables
 db.exec(`
@@ -314,49 +317,53 @@ app.get('/api/messages', (_req, res) => {
   res.json(db.prepare('SELECT * FROM messages ORDER BY id ASC').all());
 });
 
+const STMT_INSERT_MESSAGE = db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)');
+const STMT_GET_MAX_ORDER = db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS NULL');
+const STMT_INSERT_TASK = db.prepare('INSERT INTO tasks (title, sort_order) VALUES (?, ?)');
+const STMT_UPDATE_TASK_DONE = db.prepare("UPDATE tasks SET status='done', done=1 WHERE id=?");
+const STMT_GET_TASKS_LIST = db.prepare('SELECT id, title, status FROM tasks ORDER BY status, created_at DESC');
+
 app.post('/api/chat', async (req, res) => {
   const text = (req.body?.text ?? '').toString().trim();
   if (!text) return res.status(400).json({ error: 'text required' });
-  db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('user', text);
+  STMT_INSERT_MESSAGE.run('user', text);
 
   const lower = text.toLowerCase();
   const addMatch = text.match(/^\/?(add|ekle)\s+(.+)/i);
   const doneMatch = text.match(/^\/?(done|bitti|yapt(ı|i)m)\s+(\d+)/i);
   if (addMatch) {
     const title = addMatch[2].trim();
-    const maxOrder = db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS NULL').get().m;
-    db.prepare(
-      `INSERT INTO tasks (title, sort_order) VALUES (?, ?)`
-    ).run(title, maxOrder + 1);
+    const maxOrder = STMT_GET_MAX_ORDER.get().m;
+    STMT_INSERT_TASK.run(title, maxOrder + 1);
     const reply = `✅ Task eklendi: ${title}`;
-    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', reply);
+    STMT_INSERT_MESSAGE.run('assistant', reply);
     return res.json({ reply });
   }
   if (doneMatch) {
     const id = Number(doneMatch[3]);
-    db.prepare("UPDATE tasks SET status='done', done=1 WHERE id=?").run(id);
+    STMT_UPDATE_TASK_DONE.run(id);
     const reply = `☑ Task #${id} kapatıldı.`;
-    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', reply);
+    STMT_INSERT_MESSAGE.run('assistant', reply);
     return res.json({ reply });
   }
   if (lower === '/tasks' || lower === 'görevler' || lower === 'gorevler') {
-    const tasks = db.prepare('SELECT id, title, status FROM tasks ORDER BY status, created_at DESC').all();
+    const tasks = STMT_GET_TASKS_LIST.all();
     const sym = { pending: '☐', in_progress: '▶', done: '☑' };
     const reply = tasks.length
       ? tasks.map((t) => `${sym[t.status] || '☐'} #${t.id} ${t.title}`).join('\n')
       : 'Hiç görev yok.';
-    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', reply);
+    STMT_INSERT_MESSAGE.run('assistant', reply);
     return res.json({ reply });
   }
 
   if (!isOpenclawAgentEnabled()) {
     const finalReply = openclawDisabledReply();
-    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
+    STMT_INSERT_MESSAGE.run('assistant', finalReply);
     return res.json({ reply: finalReply, code: -1 });
   }
 
   const result = await callOpenclawChat(text, 'task-chat-web');
-  db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', result.reply);
+  STMT_INSERT_MESSAGE.run('assistant', result.reply);
   res.json({ reply: result.reply, code: result.ok ? 0 : -1 });
 });
 
