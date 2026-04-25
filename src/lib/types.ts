@@ -54,6 +54,13 @@ export interface Stats {
   per_day: Record<string, number>;
 }
 
+export interface OpenclawStatus {
+  enabled: boolean;
+  missing: string[];
+  gateway_url: string;
+  agent: string;
+}
+
 export const DAY_KEYS: DayKey[] = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
 export const DAY_LABELS: Record<DayKey, string> = {
   mon: 'Pazartesi',

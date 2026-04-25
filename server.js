@@ -1,14 +1,13 @@
 import express from 'express';
 import Database from 'better-sqlite3';
 import multer from 'multer';
-import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import { randomUUID } from 'crypto';
 import { fileURLToPath } from 'url';
 import {
-  buildOpenclawCommand,
-  buildOpenclawReply,
+  callOpenclawChat,
+  getOpenclawStatus,
   isOpenclawAgentEnabled,
   openclawDisabledReply,
 } from './server/openclawBridge.js';
@@ -22,7 +21,8 @@ const app = express();
 app.use(express.json({ limit: '2mb' }));
 
 // ---------- DB ----------
-const db = new Database(path.join(__dirname, 'data.db'));
+const dbPath = process.env.TASK_CHAT_DB_PATH || path.join(__dirname, 'data.db');
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
 // Base tables
@@ -306,94 +306,13 @@ app.get('/api/stats', (_req, res) => {
 });
 
 // ---------- Chat (OpenClaw bridge) ----------
+app.get('/api/openclaw/status', (_req, res) => {
+  res.json(getOpenclawStatus());
+});
+
 app.get('/api/messages', (_req, res) => {
   res.json(db.prepare('SELECT * FROM messages ORDER BY id ASC').all());
 });
-
-function runOpenclaw(message) {
-  return new Promise((resolve) => {
-    const args = [
-      'agent', '--json',
-      '--session-id', 'task-chat-web',
-      '-m', message,
-    ];
-    const openclaw = buildOpenclawCommand(args, process.env, process.execPath, fs.existsSync);
-    const proc = spawn(openclaw.command, openclaw.args, {
-      env: { ...process.env, OPENCLAW_GATEWAY_PORT: '18789' },
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
-    let stdout = '';
-    let stderr = '';
-    proc.stdout.on('data', (d) => (stdout += d.toString()));
-    proc.stderr.on('data', (d) => (stderr += d.toString()));
-    proc.on('error', (err) => console.error('[openclaw error]', err.message));
-    const timer = setTimeout(() => {
-      proc.kill('SIGTERM');
-      resolve({ code: -1, reply: '', stderr: 'timeout (60s)' });
-    }, 60000);
-    proc.on('close', (code) => {
-      clearTimeout(timer);
-      let reply = extractReply(stdout);
-      resolve({ code, reply, stderr });
-    });
-    proc.on('error', (err) => {
-      clearTimeout(timer);
-      resolve({ code: -1, reply: '', stderr: String(err) });
-    });
-  });
-}
-
-let openclawInFlight = false;
-
-// openclaw --json stdout can be a single JSON object or NDJSON (one JSON per line
-// with intermediate tool/stream events). Extract the best user-facing text.
-function extractReply(stdout) {
-  const raw = (stdout || '').trim();
-  if (!raw) return '';
-
-  // try whole-blob JSON first
-  try {
-    const parsed = JSON.parse(raw);
-    // Top-level fields
-    const top =
-      parsed?.finalAssistantText ||
-      parsed?.finalAssistantRawText ||
-      parsed?.text ||
-      parsed?.reply ||
-      parsed?.message ||
-      parsed?.output ||
-      parsed?.content;
-    if (top) return String(top);
-    // Nested result.payloads[0].text (openclaw agent --json format)
-    const nested = parsed?.result?.payloads?.[0]?.text;
-    if (nested) return String(nested);
-  } catch { /* fall through to NDJSON */ }
-
-  // NDJSON: scan bottom-up for the richest text field
-  const lines = raw.split(/\r?\n/).filter(Boolean);
-  let best = '';
-  for (const line of lines) {
-    try {
-      const obj = JSON.parse(line);
-      const p =
-        obj?.finalAssistantText ||
-        obj?.finalAssistantRawText ||
-        obj?.text ||
-        obj?.reply ||
-        obj?.message ||
-        obj?.output ||
-        obj?.content ||
-        obj?.result?.payloads?.[0]?.text ||
-        '';
-      if (p && String(p).length > best.length) best = String(p);
-    } catch { /* skip non-json line */ }
-  }
-  if (best) return best;
-
-  // last resort: return last non-empty line (trimmed to reasonable size)
-  const tail = lines[lines.length - 1] || raw;
-  return tail.length > 2000 ? tail.slice(0, 2000) + '…' : tail;
-}
 
 app.post('/api/chat', async (req, res) => {
   const text = (req.body?.text ?? '').toString().trim();
@@ -436,19 +355,9 @@ app.post('/api/chat', async (req, res) => {
     return res.json({ reply: finalReply, code: -1 });
   }
 
-  if (openclawInFlight) {
-    const finalReply = 'OpenClaw hala önceki mesajı işliyor. Birkaç saniye sonra tekrar dene.';
-    db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
-    return res.json({ reply: finalReply, code: -1 });
-  }
-
-  openclawInFlight = true;
-  const { code, reply, stderr } = await runOpenclaw(text).finally(() => {
-    openclawInFlight = false;
-  });
-  const finalReply = buildOpenclawReply({ code, reply, stderr });
-  db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', finalReply);
-  res.json({ reply: finalReply, code });
+  const result = await callOpenclawChat(text, 'task-chat-web');
+  db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)').run('assistant', result.reply);
+  res.json({ reply: result.reply, code: result.ok ? 0 : -1 });
 });
 
 // ---------- Static (built SPA) ----------
@@ -462,6 +371,8 @@ if (fs.existsSync(DIST_DIR)) {
 // ---------- Start ----------
 const PORT = process.env.PORT || 3000;
 
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`task-chat server on http://127.0.0.1:${PORT}`);
+const server = app.listen(PORT, '127.0.0.1', () => {
+  const addr = server.address();
+  const port = typeof addr === 'object' && addr ? addr.port : PORT;
+  console.log(`task-chat server on http://127.0.0.1:${port}`);
 });

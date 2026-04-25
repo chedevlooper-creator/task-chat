@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { MessageSquare, Send, X } from 'lucide-react';
-import { useMessages, useSendMessage } from '../lib/queries';
+import { useMessages, useOpenclawStatus, useSendMessage } from '../lib/queries';
 import { cn, formatTime } from '../lib/utils';
 
 // Clean up messages that were stored as raw openclaw JSON/NDJSON.
@@ -37,6 +37,7 @@ function cleanMessageText(raw: string): string {
 export function ChatPanel() {
   const [open, setOpen] = useState(false);
   const [text, setText] = useState('');
+  const openclawStatus = useOpenclawStatus();
   const { data: messages = [] } = useMessages();
   const send = useSendMessage();
   const streamRef = useRef<HTMLDivElement>(null);
@@ -63,6 +64,10 @@ export function ChatPanel() {
     send.mutate(t);
     setText('');
   };
+
+  const status = openclawStatus.data;
+  const shouldShowSetupGuide =
+    (status && !status.enabled) || openclawStatus.isError || send.isError || send.data?.code === -1;
 
   return (
     <>
@@ -106,6 +111,41 @@ export function ChatPanel() {
             </header>
 
             <div ref={streamRef} className="flex-1 space-y-3 overflow-y-auto px-4 py-4 text-sm">
+              {shouldShowSetupGuide && (
+                <div className="border border-line bg-surface/70 p-3 text-xs leading-6 text-ink-2">
+                  <div className="mb-1 font-mono text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-2">
+                    Nasıl kurulur?
+                  </div>
+                  <div className="space-y-1">
+                    <div>
+                      1) OpenClaw Gateway’i çalıştır (varsayılan: <code className="text-ink">127.0.0.1:18789</code>).
+                    </div>
+                    <div>
+                      2) Uygulamayı başlatmadan önce şu env’leri ayarla:{' '}
+                      <code className="text-ink">TASK_CHAT_ENABLE_OPENCLAW_AGENT=1</code> ve{' '}
+                      <code className="text-ink">OPENCLAW_GATEWAY_TOKEN=...</code>
+                    </div>
+                    <div>
+                      3) OpenClaw config’te şu değerler açık olmalı:{' '}
+                      <code className="text-ink">gateway.http.endpoints.chatCompletions.enabled=true</code> ve{' '}
+                      <code className="text-ink">gateway.auth.mode="token"</code>
+                    </div>
+                    <div>
+                      4) Smoke test:{' '}
+                      <code className="text-ink">
+                        curl http://127.0.0.1:18789/v1/models -H "Authorization: Bearer $OPENCLAW_GATEWAY_TOKEN"
+                      </code>
+                    </div>
+                    <div>5) Değişikliklerden sonra uygulamayı yeniden başlat.</div>
+                  </div>
+                  {status && (
+                    <div className="mt-2 font-mono text-[10px] text-ink-3">
+                      Durum: {status.enabled ? 'etkin' : 'kapalı'} · Gateway: {status.gateway_url} · Agent: {status.agent}
+                      {status.missing.length > 0 ? ` · Eksik: ${status.missing.join(', ')}` : ''}
+                    </div>
+                  )}
+                </div>
+              )}
               {messages.length === 0 && (
                 <div className="border border-line bg-surface/70 p-3 text-xs leading-6 text-ink-2">
                   Lokal komutlar hazır. <code className="text-ink">/add</code>,{' '}

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { api } from './api';
-import type { ChatMessage, Member, Reminder, Stats, Task } from './types';
+import type { ChatMessage, Member, OpenclawStatus, Reminder, Stats, Task } from './types';
 
 export const keys = {
   tasks: ['tasks'] as const,
@@ -8,6 +8,7 @@ export const keys = {
   reminders: ['reminders'] as const,
   stats: ['stats'] as const,
   messages: ['messages'] as const,
+  openclawStatus: ['openclawStatus'] as const,
 };
 
 // ---------- Tasks ----------
@@ -130,6 +131,12 @@ export function useStats() {
 }
 
 // ---------- Chat ----------
+export function useOpenclawStatus() {
+  return useQuery({
+    queryKey: keys.openclawStatus,
+    queryFn: () => api.get<OpenclawStatus>('/api/openclaw/status'),
+  });
+}
 export function useMessages() {
   return useQuery({ queryKey: keys.messages, queryFn: () => api.get<ChatMessage[]>('/api/messages') });
 }
