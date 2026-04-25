@@ -12,6 +12,7 @@ import {
   isOpenclawAgentEnabled,
   openclawDisabledReply,
 } from './server/openclawBridge.js';
+import { sdkRouter } from './server/sdkRouter.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const UPLOAD_DIR = path.join(__dirname, 'uploads');
@@ -20,6 +21,9 @@ if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
+
+// ---------- SDK API Routes ----------
+app.use(sdkRouter);
 
 // ---------- DB ----------
 const db = new Database(path.join(__dirname, 'data.db'));
