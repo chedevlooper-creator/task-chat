@@ -35,10 +35,5 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ],
-  "env": {
-    "TASK_CHAT_ENABLE_OPENCLAW_AGENT": "false",
-    "OPENCLAW_GATEWAY_TOKEN": "placeholder",
-    "OPENCLAW_GATEWAY_URL": "placeholder"
-  }
+  ]
 }
