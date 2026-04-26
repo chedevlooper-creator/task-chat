@@ -26,8 +26,8 @@
     }
   ],
   "env": {
-    "TASK_CHAT_ENABLE_OPENCLAW_AGENT": "@task_chat_enable_openclaw_agent",
-    "OPENCLAW_GATEWAY_TOKEN": "@openclaw_gateway_token",
-    "OPENCLAW_GATEWAY_URL": "@openclaw_gateway_url"
+    "TASK_CHAT_ENABLE_OPENCLAW_AGENT": "false",
+    "OPENCLAW_GATEWAY_TOKEN": "placeholder",
+    "OPENCLAW_GATEWAY_URL": "placeholder"
   }
 }
