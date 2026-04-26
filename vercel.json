@@ -2,14 +2,13 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/**",
-      "use": "@vercel/static"
-    },
-    {
       "src": "server.js",
       "use": "@vercel/node",
       "config": {
-        "regions": ["fra1"]
+        "regions": ["fra1"],
+        "nativelyCompileRemotePatterns": [
+          { "hostname": "**" }
+        ]
       }
     }
   ],
@@ -17,6 +16,9 @@
     {
       "src": "/api/(.*)",
       "dest": "/server.js"
+    },
+    {
+      "handle": "filesystem"
     },
     {
       "src": "/(.*)",
