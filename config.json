@@ -1,0 +1,18 @@
+{
+  "id": "ws_79942ce3",
+  "name": "task-chat",
+  "slug": "task-chat",
+  "defaults": {
+    "permissionMode": "safe",
+    "cyclablePermissionModes": [
+      "safe",
+      "allow-all"
+    ],
+    "enabledSourceSlugs": []
+  },
+  "localMcpServers": {
+    "enabled": true
+  },
+  "createdAt": 1777106195420,
+  "updatedAt": 1777106195421
+}

@@ -1,0 +1,1 @@
+& "C:\Users\isaha\AppData\Local\cloudflared\cloudflared.exe" tunnel --url http://127.0.0.1:18789

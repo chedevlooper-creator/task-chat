@@ -1,0 +1,6 @@
+- [x] `GET /api/openclaw/status` JSON yanıtı `enabled`, `missing`, `gateway_url`, `agent` alanlarını içeriyor
+- [x] Yanıtta token veya token’dan türetilmiş hassas bilgi yok
+- [x] OpenClaw devre dışıyken ChatPanel “Nasıl kurulur?” adımlarını gösteriyor
+- [x] OpenClaw bağlantı hatasında kullanıcı aynı rehbere yönlendiriliyor
+- [x] `npm test` başarılı
+- [x] `npm run build` başarılı

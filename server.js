@@ -73,15 +73,51 @@ function ensureColumn(table, column, definition) {
     db.exec(`ALTER TABLE ${table} ADD COLUMN ${column} ${definition}`);
   }
 }
-ensureColumn('tasks', 'day', "TEXT");                       // 'mon'..'sun' | NULL (backlog)
-ensureColumn('tasks', 'priority', "TEXT NOT NULL DEFAULT 'medium'"); // low|medium|high
-ensureColumn('tasks', 'status', "TEXT NOT NULL DEFAULT 'pending'");  // pending|in_progress|done
+ensureColumn('tasks', 'day', "TEXT");
+ensureColumn('tasks', 'priority', "TEXT NOT NULL DEFAULT 'medium'");
+ensureColumn('tasks', 'status', "TEXT NOT NULL DEFAULT 'pending'");
 ensureColumn('tasks', 'sort_order', "INTEGER NOT NULL DEFAULT 0");
 ensureColumn('tasks', 'notes', "TEXT NOT NULL DEFAULT ''");
-ensureColumn('tasks', 'assignee_ids', "TEXT NOT NULL DEFAULT '[]'"); // JSON array of member ids
+ensureColumn('tasks', 'assignee_ids', "TEXT NOT NULL DEFAULT '[]'");
 
-// Backfill status from legacy `done` column once
 db.exec(`UPDATE tasks SET status='done' WHERE done=1 AND status='pending'`);
+
+// ---------- Prepared Statements (Global Scope) ----------
+const STMT_GET_ATTACHMENTS_BY_TASK = db.prepare('SELECT id, filename, mime, size, created_at FROM attachments WHERE task_id=? ORDER BY id ASC');
+const STMT_GET_TASK_BY_ID = db.prepare('SELECT * FROM tasks WHERE id=?');
+const STMT_GET_MAX_ORDER_BY_DAY = db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS ?');
+const STMT_INSERT_TASK_FULL = db.prepare(`INSERT INTO tasks (title, day, priority, status, sort_order, notes, assignee_ids, done) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+const STMT_UPDATE_TASK = db.prepare(`UPDATE tasks SET title=?, day=?, priority=?, status=?, notes=?, assignee_ids=?, done=? WHERE id=?`);
+const STMT_GET_ALL_TASKS = db.prepare('SELECT * FROM tasks ORDER BY CASE WHEN day IS NULL THEN 1 ELSE 0 END, day, sort_order ASC, created_at ASC');
+const STMT_GET_TASK_ATTACHMENTS = db.prepare('SELECT stored_name FROM attachments WHERE task_id=?');
+const STMT_DELETE_ATTACHMENTS_BY_TASK = db.prepare('DELETE FROM attachments WHERE task_id=?');
+const STMT_DELETE_TASK = db.prepare('DELETE FROM tasks WHERE id=?');
+const STMT_UPDATE_TASK_REORDER = db.prepare('UPDATE tasks SET day=?, sort_order=? WHERE id=?');
+const STMT_GET_ALL_MEMBERS = db.prepare('SELECT * FROM members ORDER BY id ASC');
+const STMT_INSERT_MEMBER = db.prepare('INSERT INTO members (name, color) VALUES (?, ?)');
+const STMT_GET_MEMBER_BY_ID = db.prepare('SELECT * FROM members WHERE id=?');
+const STMT_UPDATE_MEMBER = db.prepare('UPDATE members SET name=?, color=? WHERE id=?');
+const STMT_DELETE_MEMBER = db.prepare('DELETE FROM members WHERE id=?');
+const STMT_GET_TASKS_BY_ASSIGNEE = db.prepare("SELECT id, assignee_ids FROM tasks WHERE assignee_ids LIKE ?");
+const STMT_UPDATE_TASK_ASSIGNEES = db.prepare('UPDATE tasks SET assignee_ids=? WHERE id=?');
+const STMT_GET_ALL_REMINDERS = db.prepare('SELECT * FROM reminders ORDER BY created_at DESC');
+const STMT_INSERT_REMINDER = db.prepare('INSERT INTO reminders (title, body) VALUES (?, ?)');
+const STMT_DELETE_REMINDER = db.prepare('DELETE FROM reminders WHERE id=?');
+const STMT_GET_REMINDER_BY_ID = db.prepare('SELECT * FROM reminders WHERE id=?');
+const STMT_INSERT_ATTACHMENT = db.prepare('INSERT INTO attachments (task_id, filename, stored_name, mime, size) VALUES (?, ?, ?, ?, ?)');
+const STMT_GET_ATTACHMENT_BY_ID = db.prepare('SELECT * FROM attachments WHERE id=?');
+const STMT_GET_ATTACHMENT_FIELDS = db.prepare('SELECT id, filename, mime, size, created_at FROM attachments WHERE id=?');
+const STMT_DELETE_ATTACHMENT = db.prepare('DELETE FROM attachments WHERE id=?');
+const STMT_COUNT_TASKS = db.prepare('SELECT COUNT(*) AS n FROM tasks');
+const STMT_COUNT_TASKS_BY_STATUS = db.prepare("SELECT COUNT(*) AS n FROM tasks WHERE status=?");
+const STMT_COUNT_TASKS_BY_DAY = db.prepare('SELECT COUNT(*) AS n FROM tasks WHERE day=?');
+const STMT_COUNT_TASKS_NO_DAY = db.prepare('SELECT COUNT(*) AS n FROM tasks WHERE day IS NULL');
+const STMT_INSERT_MESSAGE = db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)');
+const STMT_GET_ALL_MESSAGES = db.prepare('SELECT * FROM messages ORDER BY id ASC');
+const STMT_GET_TASKS_LIST = db.prepare('SELECT id, title, status FROM tasks ORDER BY status, created_at DESC');
+const STMT_INSERT_TASK = db.prepare('INSERT INTO tasks (title, sort_order) VALUES (?, ?)');
+const STMT_UPDATE_TASK_DONE = db.prepare("UPDATE tasks SET status='done', done=1 WHERE id=?");
+const STMT_GET_MAX_ORDER_NULL = db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS NULL');
 
 // ---------- Helpers ----------
 const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
@@ -92,9 +128,7 @@ function serializeTask(row) {
   if (!row) return row;
   let assignees = [];
   try { assignees = JSON.parse(row.assignee_ids || '[]'); } catch { assignees = []; }
-  const attachments = db.prepare(
-    'SELECT id, filename, mime, size, created_at FROM attachments WHERE task_id=? ORDER BY id ASC'
-  ).all(row.id);
+  const attachments = STMT_GET_ATTACHMENTS_BY_TASK.all(row.id);
   return {
     id: row.id,
     title: row.title,
@@ -111,15 +145,13 @@ function serializeTask(row) {
 }
 
 function getTask(id) {
-  const row = db.prepare('SELECT * FROM tasks WHERE id=?').get(id);
+  const row = STMT_GET_TASK_BY_ID.get(id);
   return row ? serializeTask(row) : null;
 }
 
 // ---------- Tasks ----------
 app.get('/api/tasks', (_req, res) => {
-  const rows = db.prepare(
-    'SELECT * FROM tasks ORDER BY CASE WHEN day IS NULL THEN 1 ELSE 0 END, day, sort_order ASC, created_at ASC'
-  ).all();
+  const rows = STMT_GET_ALL_TASKS.all();
   res.json(rows.map(serializeTask));
 });
 
@@ -132,19 +164,14 @@ app.post('/api/tasks', (req, res) => {
   const status = STATUSES.includes(b.status) ? b.status : 'pending';
   const notes = (b.notes ?? '').toString();
   const assignees = Array.isArray(b.assignee_ids) ? b.assignee_ids.filter((x) => Number.isInteger(x)) : [];
-  const maxOrder = db.prepare(
-    'SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS ?'
-  ).get(day).m;
-  const info = db.prepare(
-    `INSERT INTO tasks (title, day, priority, status, sort_order, notes, assignee_ids, done)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-  ).run(title, day, priority, status, maxOrder + 1, notes, JSON.stringify(assignees), status === 'done' ? 1 : 0);
+  const maxOrder = STMT_GET_MAX_ORDER_BY_DAY.get(day).m;
+  const info = STMT_INSERT_TASK_FULL.run(title, day, priority, status, maxOrder + 1, notes, JSON.stringify(assignees), status === 'done' ? 1 : 0);
   res.json(getTask(info.lastInsertRowid));
 });
 
 app.patch('/api/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
-  const row = db.prepare('SELECT * FROM tasks WHERE id=?').get(id);
+  const row = STMT_GET_TASK_BY_ID.get(id);
   if (!row) return res.status(404).json({ error: 'not found' });
   const b = req.body ?? {};
   const next = {
@@ -157,13 +184,10 @@ app.patch('/api/tasks/:id', (req, res) => {
       ? JSON.stringify(b.assignee_ids.filter((x) => Number.isInteger(x)))
       : row.assignee_ids,
   };
-  // Legacy toggle
   if (b.done !== undefined && b.status === undefined) {
     next.status = b.done ? 'done' : 'pending';
   }
-  db.prepare(
-    `UPDATE tasks SET title=?, day=?, priority=?, status=?, notes=?, assignee_ids=?, done=? WHERE id=?`
-  ).run(
+  STMT_UPDATE_TASK.run(
     next.title, next.day, next.priority, next.status, next.notes, next.assignee_ids,
     next.status === 'done' ? 1 : 0, id
   );
@@ -172,9 +196,9 @@ app.patch('/api/tasks/:id', (req, res) => {
 
 app.delete('/api/tasks/:id', (req, res) => {
   const id = Number(req.params.id);
-  const atts = db.prepare('SELECT stored_name FROM attachments WHERE task_id=?').all(id);
-  db.prepare('DELETE FROM attachments WHERE task_id=?').run(id);
-  db.prepare('DELETE FROM tasks WHERE id=?').run(id);
+  const atts = STMT_GET_TASK_ATTACHMENTS.all(id);
+  STMT_DELETE_ATTACHMENTS_BY_TASK.run(id);
+  STMT_DELETE_TASK.run(id);
   for (const a of atts) {
     const p = path.join(UPLOAD_DIR, a.stored_name);
     if (fs.existsSync(p)) fs.unlinkSync(p);
@@ -198,52 +222,50 @@ app.post('/api/tasks/reorder', (req, res) => {
 
 // ---------- Members ----------
 app.get('/api/members', (_req, res) => {
-  res.json(db.prepare('SELECT * FROM members ORDER BY id ASC').all());
+  res.json(STMT_GET_ALL_MEMBERS.all());
 });
 app.post('/api/members', (req, res) => {
   const name = (req.body?.name ?? '').toString().trim();
   const color = (req.body?.color ?? '#10b981').toString();
   if (!name) return res.status(400).json({ error: 'name required' });
-  const info = db.prepare('INSERT INTO members (name, color) VALUES (?, ?)').run(name, color);
-  res.json(db.prepare('SELECT * FROM members WHERE id=?').get(info.lastInsertRowid));
+  const info = STMT_INSERT_MEMBER.run(name, color);
+  res.json(STMT_GET_MEMBER_BY_ID.get(info.lastInsertRowid));
 });
 app.patch('/api/members/:id', (req, res) => {
   const id = Number(req.params.id);
-  const row = db.prepare('SELECT * FROM members WHERE id=?').get(id);
+  const row = STMT_GET_MEMBER_BY_ID.get(id);
   if (!row) return res.status(404).json({ error: 'not found' });
   const name = req.body?.name !== undefined ? String(req.body.name) : row.name;
   const color = req.body?.color !== undefined ? String(req.body.color) : row.color;
-  db.prepare('UPDATE members SET name=?, color=? WHERE id=?').run(name, color, id);
-  res.json(db.prepare('SELECT * FROM members WHERE id=?').get(id));
+  STMT_UPDATE_MEMBER.run(name, color, id);
+  res.json(STMT_GET_MEMBER_BY_ID.get(id));
 });
 app.delete('/api/members/:id', (req, res) => {
   const id = Number(req.params.id);
-  db.prepare('DELETE FROM members WHERE id=?').run(id);
-  // Remove from tasks.assignee_ids
-  const rows = db.prepare("SELECT id, assignee_ids FROM tasks WHERE assignee_ids LIKE ?").all(`%${id}%`);
-  const upd = db.prepare('UPDATE tasks SET assignee_ids=? WHERE id=?');
+  STMT_DELETE_MEMBER.run(id);
+  const rows = STMT_GET_TASKS_BY_ASSIGNEE.all(`%${id}%`);
   for (const r of rows) {
     let list = [];
     try { list = JSON.parse(r.assignee_ids); } catch {}
     const filtered = list.filter((x) => x !== id);
-    if (filtered.length !== list.length) upd.run(JSON.stringify(filtered), r.id);
+    if (filtered.length !== list.length) STMT_UPDATE_TASK_ASSIGNEES.run(JSON.stringify(filtered), r.id);
   }
   res.json({ ok: true });
 });
 
 // ---------- Reminders ----------
 app.get('/api/reminders', (_req, res) => {
-  res.json(db.prepare('SELECT * FROM reminders ORDER BY created_at DESC').all());
+  res.json(STMT_GET_ALL_REMINDERS.all());
 });
 app.post('/api/reminders', (req, res) => {
   const title = (req.body?.title ?? '').toString().trim();
   const body = (req.body?.body ?? '').toString();
   if (!title) return res.status(400).json({ error: 'title required' });
-  const info = db.prepare('INSERT INTO reminders (title, body) VALUES (?, ?)').run(title, body);
-  res.json(db.prepare('SELECT * FROM reminders WHERE id=?').get(info.lastInsertRowid));
+  const info = STMT_INSERT_REMINDER.run(title, body);
+  res.json(STMT_GET_REMINDER_BY_ID.get(info.lastInsertRowid));
 });
 app.delete('/api/reminders/:id', (req, res) => {
-  db.prepare('DELETE FROM reminders WHERE id=?').run(Number(req.params.id));
+  STMT_DELETE_REMINDER.run(Number(req.params.id));
   res.json({ ok: true });
 });
 
@@ -259,21 +281,18 @@ const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 app.post('/api/tasks/:id/attachments', upload.array('files', 10), (req, res) => {
   const taskId = Number(req.params.id);
-  const row = db.prepare('SELECT id FROM tasks WHERE id=?').get(taskId);
+  const row = STMT_GET_TASK_BY_ID.get(taskId);
   if (!row) return res.status(404).json({ error: 'task not found' });
-  const ins = db.prepare(
-    'INSERT INTO attachments (task_id, filename, stored_name, mime, size) VALUES (?, ?, ?, ?, ?)'
-  );
   const out = [];
   for (const f of req.files || []) {
-    const info = ins.run(taskId, f.originalname, f.filename, f.mimetype || '', f.size || 0);
-    out.push(db.prepare('SELECT id, filename, mime, size, created_at FROM attachments WHERE id=?').get(info.lastInsertRowid));
+    const info = STMT_INSERT_ATTACHMENT.run(taskId, f.originalname, f.filename, f.mimetype || '', f.size || 0);
+    out.push(STMT_GET_ATTACHMENT_FIELDS.get(info.lastInsertRowid));
   }
   res.json(out);
 });
 
 app.get('/api/attachments/:id', (req, res) => {
-  const row = db.prepare('SELECT * FROM attachments WHERE id=?').get(Number(req.params.id));
+  const row = STMT_GET_ATTACHMENT_BY_ID.get(Number(req.params.id));
   if (!row) return res.status(404).json({ error: 'not found' });
   const p = path.join(UPLOAD_DIR, row.stored_name);
   if (!fs.existsSync(p)) return res.status(410).json({ error: 'file missing' });
@@ -284,9 +303,9 @@ app.get('/api/attachments/:id', (req, res) => {
 
 app.delete('/api/attachments/:id', (req, res) => {
   const id = Number(req.params.id);
-  const row = db.prepare('SELECT * FROM attachments WHERE id=?').get(id);
+  const row = STMT_GET_ATTACHMENT_BY_ID.get(id);
   if (!row) return res.json({ ok: true });
-  db.prepare('DELETE FROM attachments WHERE id=?').run(id);
+  STMT_DELETE_ATTACHMENT.run(id);
   const p = path.join(UPLOAD_DIR, row.stored_name);
   if (fs.existsSync(p)) fs.unlinkSync(p);
   res.json({ ok: true });
@@ -294,16 +313,14 @@ app.delete('/api/attachments/:id', (req, res) => {
 
 // ---------- Stats ----------
 app.get('/api/stats', (_req, res) => {
-  const total = db.prepare('SELECT COUNT(*) AS n FROM tasks').get().n;
-  const done = db.prepare("SELECT COUNT(*) AS n FROM tasks WHERE status='done'").get().n;
-  const inProgress = db.prepare("SELECT COUNT(*) AS n FROM tasks WHERE status='in_progress'").get().n;
-  const pending = db.prepare("SELECT COUNT(*) AS n FROM tasks WHERE status='pending'").get().n;
+  const total = STMT_COUNT_TASKS.get().n;
+  const done = STMT_COUNT_TASKS_BY_STATUS.get('done').n;
+  const inProgress = STMT_COUNT_TASKS_BY_STATUS.get('in_progress').n;
+  const pending = STMT_COUNT_TASKS_BY_STATUS.get('pending').n;
   const perDay = {};
   for (const d of [...DAYS, null]) {
     const key = d ?? 'backlog';
-    perDay[key] = db.prepare(
-      d ? 'SELECT COUNT(*) AS n FROM tasks WHERE day=?' : 'SELECT COUNT(*) AS n FROM tasks WHERE day IS NULL'
-    ).get(...(d ? [d] : [])).n;
+    perDay[key] = d ? STMT_COUNT_TASKS_BY_DAY.get(d).n : STMT_COUNT_TASKS_NO_DAY.get().n;
   }
   res.json({ total, done, in_progress: inProgress, pending, per_day: perDay });
 });
@@ -314,14 +331,8 @@ app.get('/api/openclaw/status', (_req, res) => {
 });
 
 app.get('/api/messages', (_req, res) => {
-  res.json(db.prepare('SELECT * FROM messages ORDER BY id ASC').all());
+  res.json(STMT_GET_ALL_MESSAGES.all());
 });
-
-const STMT_INSERT_MESSAGE = db.prepare('INSERT INTO messages (role, text) VALUES (?, ?)');
-const STMT_GET_MAX_ORDER = db.prepare('SELECT COALESCE(MAX(sort_order), -1) AS m FROM tasks WHERE day IS NULL');
-const STMT_INSERT_TASK = db.prepare('INSERT INTO tasks (title, sort_order) VALUES (?, ?)');
-const STMT_UPDATE_TASK_DONE = db.prepare("UPDATE tasks SET status='done', done=1 WHERE id=?");
-const STMT_GET_TASKS_LIST = db.prepare('SELECT id, title, status FROM tasks ORDER BY status, created_at DESC');
 
 app.post('/api/chat', async (req, res) => {
   const text = (req.body?.text ?? '').toString().trim();
@@ -333,7 +344,7 @@ app.post('/api/chat', async (req, res) => {
   const doneMatch = text.match(/^\/?(done|bitti|yapt(ı|i)m)\s+(\d+)/i);
   if (addMatch) {
     const title = addMatch[2].trim();
-    const maxOrder = STMT_GET_MAX_ORDER.get().m;
+    const maxOrder = STMT_GET_MAX_ORDER_NULL.get().m;
     STMT_INSERT_TASK.run(title, maxOrder + 1);
     const reply = `✅ Task eklendi: ${title}`;
     STMT_INSERT_MESSAGE.run('assistant', reply);
