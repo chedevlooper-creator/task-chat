@@ -13,20 +13,75 @@ import {
 } from './server/openclawBridge.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const UPLOAD_DIR = path.join(__dirname, 'uploads');
 const DIST_DIR = path.join(__dirname, 'dist');
-if (!fs.existsSync(UPLOAD_DIR)) fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+
+const isServerless =
+  Boolean(process.env.VERCEL) ||
+  Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME) ||
+  Boolean(process.env.NOW_REGION);
+
+function ensureWritableDir(dir) {
+  try {
+    fs.mkdirSync(dir, { recursive: true });
+    fs.accessSync(dir, fs.constants.W_OK);
+    const probe = path.join(dir, `.probe-${randomUUID()}`);
+    fs.writeFileSync(probe, '1');
+    fs.unlinkSync(probe);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const storageRootCandidates = [
+  process.env.TASK_CHAT_STORAGE_DIR,
+  isServerless ? path.join(path.sep, 'tmp', 'task-chat') : null,
+  __dirname,
+].filter(Boolean);
+
+let STORAGE_ROOT = null;
+for (const candidate of storageRootCandidates) {
+  if (ensureWritableDir(candidate)) {
+    STORAGE_ROOT = candidate;
+    break;
+  }
+}
+
+let UPLOAD_DIR = null;
+if (STORAGE_ROOT) {
+  const candidate = path.join(STORAGE_ROOT, 'uploads');
+  if (ensureWritableDir(candidate)) UPLOAD_DIR = candidate;
+}
 
 const app = express();
 app.use(express.json({ limit: '2mb' }));
 
 // ---------- DB ----------
-const dbPath = process.env.TASK_CHAT_DB_PATH || path.join(__dirname, 'data.db');
-const db = new Database(dbPath);
-db.pragma('journal_mode = WAL');
-db.pragma('synchronous = NORMAL');
-db.pragma('cache_size = -64000');
-db.pragma('temp_store = MEMORY');
+const dbPathCandidates = [
+  process.env.TASK_CHAT_DB_PATH,
+  STORAGE_ROOT ? path.join(STORAGE_ROOT, 'data.db') : null,
+  ':memory:',
+].filter(Boolean);
+
+let dbPath = ':memory:';
+let db = null;
+for (const candidate of dbPathCandidates) {
+  try {
+    db = new Database(candidate);
+    dbPath = candidate;
+    break;
+  } catch {}
+}
+if (!db) db = new Database(':memory:');
+const safePragma = (sql) => {
+  try {
+    db.pragma(sql);
+  } catch {}
+};
+safePragma('journal_mode = WAL');
+safePragma('synchronous = NORMAL');
+safePragma('cache_size = -64000');
+safePragma('temp_store = MEMORY');
 
 // Base tables
 db.exec(`
@@ -199,9 +254,11 @@ app.delete('/api/tasks/:id', (req, res) => {
   const atts = STMT_GET_TASK_ATTACHMENTS.all(id);
   STMT_DELETE_ATTACHMENTS_BY_TASK.run(id);
   STMT_DELETE_TASK.run(id);
-  for (const a of atts) {
-    const p = path.join(UPLOAD_DIR, a.stored_name);
-    if (fs.existsSync(p)) fs.unlinkSync(p);
+  if (UPLOAD_DIR) {
+    for (const a of atts) {
+      const p = path.join(UPLOAD_DIR, a.stored_name);
+      if (fs.existsSync(p)) fs.unlinkSync(p);
+    }
   }
   res.json({ ok: true });
 });
@@ -270,16 +327,22 @@ app.delete('/api/reminders/:id', (req, res) => {
 });
 
 // ---------- Attachments ----------
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${randomUUID()}${ext}`);
-  },
-});
-const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+const uploadMw = (() => {
+  if (!UPLOAD_DIR) {
+    return (_req, res) => res.status(503).json({ error: 'uploads unavailable' });
+  }
+  const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname);
+      cb(null, `${randomUUID()}${ext}`);
+    },
+  });
+  const upload = multer({ storage, limits: { fileSize: 10 * 1024 * 1024 } });
+  return upload.array('files', 10);
+})();
 
-app.post('/api/tasks/:id/attachments', upload.array('files', 10), (req, res) => {
+app.post('/api/tasks/:id/attachments', uploadMw, (req, res) => {
   const taskId = Number(req.params.id);
   const row = STMT_GET_TASK_BY_ID.get(taskId);
   if (!row) return res.status(404).json({ error: 'task not found' });
@@ -292,6 +355,7 @@ app.post('/api/tasks/:id/attachments', upload.array('files', 10), (req, res) => 
 });
 
 app.get('/api/attachments/:id', (req, res) => {
+  if (!UPLOAD_DIR) return res.status(503).json({ error: 'uploads unavailable' });
   const row = STMT_GET_ATTACHMENT_BY_ID.get(Number(req.params.id));
   if (!row) return res.status(404).json({ error: 'not found' });
   const p = path.join(UPLOAD_DIR, row.stored_name);
@@ -302,6 +366,7 @@ app.get('/api/attachments/:id', (req, res) => {
 });
 
 app.delete('/api/attachments/:id', (req, res) => {
+  if (!UPLOAD_DIR) return res.status(503).json({ error: 'uploads unavailable' });
   const id = Number(req.params.id);
   const row = STMT_GET_ATTACHMENT_BY_ID.get(id);
   if (!row) return res.json({ ok: true });
