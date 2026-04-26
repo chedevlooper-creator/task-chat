@@ -16,7 +16,7 @@ export function isOpenclawAgentEnabled(env = process.env) {
 }
 
 export function openclawDisabledReply() {
-  return 'OpenClaw agent bu oturumda etkin değil. Lokal komutlar çalışır: /add görev, /done 1, /tasks. Doğal dil için TASK_CHAT_ENABLE_OPENCLAW_AGENT=1 ve OPENCLAW_GATEWAY_TOKEN ayarlanmalı; ardından OpenClaw config içinde gateway.http.endpoints.chatCompletions.enabled=true olmalı.';
+  return 'OpenClaw agent bu oturumda etkin değil. Lokal komutlar çalışır: /add görev, /done 1, /tasks. Doğal dil için TASK_CHAT_ENABLE_OPENCLAW_AGENT=1 ve OPENCLAW_GATEWAY_TOKEN ayarlanmalı (Vercel için ayrıca OPENCLAW_GATEWAY_URL gerekli); ardından OpenClaw config içinde gateway.http.endpoints.chatCompletions.enabled=true olmalı.';
 }
 
 export function getOpenclawStatus(env = process.env) {
@@ -148,7 +148,7 @@ export async function callOpenclawChat(message, sessionKey, opts = {}) {
     if (/ECONNREFUSED|fetch failed/i.test(msg)) {
       return {
         ok: false,
-        reply: 'OpenClaw gateway erişilemedi. Gateway çalışıyor mu? (varsayılan 127.0.0.1:18789)',
+        reply: `OpenClaw gateway erişilemedi: ${baseUrl}. Gateway çalışıyor mu?`,
       };
     }
     return { ok: false, reply: `OpenClaw bridge hatası: ${msg}` };
