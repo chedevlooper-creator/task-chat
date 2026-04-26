@@ -119,11 +119,11 @@
 
 | Icon | Label | Screen |
 |------|-------|--------|
-| 🏠 | Ana Sayfa | Dashboard overview |
+| 🏠 | Ana Sayfa | Dashboard overview (Kaldırıldı) |
 | 📋 | İşlemler | Transaction history |
-| ➕ | Yeni | Quick action FAB |
-| 💰 | Aidat | Membership dues |
-| 👤 | Profil | User profile & settings |
+| ➕ | Yeni | Quick action FAB (Kaldırıldı) |
+| 💰 | Aidat | Membership dues (Kaldırıldı) |
+| 👤 | Profil | User profile & settings (Kaldırıldı) |
 
 ---
 

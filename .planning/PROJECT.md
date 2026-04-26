@@ -22,15 +22,15 @@ Members can manage their association activities — view dues status, make payme
 - ✓ Build pipeline (vite) — existing
 
 ### Active
-- [ ] Dashboard (Ana Sayfa) with member overview, dues status, announcements
-- [ ] Quick Action Center (Yeni) for rapid task access
-- [ ] Dues Management (Aidat) screen with payment tracking
-- [ ] Profile screen with settings and membership info
 - [ ] Bottom tab navigation (5 tabs)
 - [ ] Claymorphism design system implementation
 - [ ] Dark mode support
 
 ### Out of Scope
+- Dashboard (Ana Sayfa) with member overview, dues status, announcements
+- Quick Action Center (Yeni) for rapid task access
+- Dues Management (Aidat) screen with payment tracking
+- Profile screen with settings and membership info
 - Native iOS/Android apps (PWA approach only)
 - Payment gateway integration (manual tracking for v1)
 
